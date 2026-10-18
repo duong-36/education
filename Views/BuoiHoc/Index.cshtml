@@ -348,7 +348,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                                                         
                                                         <!-- Top Row: Mã ca + Loại thống kê 2 (Thi/KT vs Khóa) & Trạng thái thống kê 1 (Xong vs Lên lịch) -->
                                                         <div class="flex items-center justify-between gap-1 min-w-0">
-                                                            <span class="font-mono text-[9px] font-bold text-outline truncate flex-shrink-0">#BH@b.MaBuoiHoc.ToString("D2")</span>
+                                                            <span class="font-mono text-[9px] font-bold text-outline truncate flex-shrink-0">@($"#BH{b.MaBuoiHoc:D2}")</span>
                                                             <div class="flex items-center gap-1 min-w-0 flex-shrink-0">
                                                                 @if (isThi)
                                                                 {
@@ -407,7 +407,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                                                                 <button type="button" onclick="openEditDrawerFromElement(this)" class="w-5.5 h-5.5 rounded text-outline hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-colors cursor-pointer" title="Chỉnh sửa ca học">
                                                                     <span class="material-symbols-outlined text-[13px]">edit</span>
                                                                 </button>
-                                                                <button type="button" onclick="confirmDelete(@b.MaBuoiHoc, '#BH@b.MaBuoiHoc.ToString("D2") - @(b.LopHoc?.TenLop ?? "") (@b.PhongHoc)')" class="w-5.5 h-5.5 rounded text-outline hover:text-danger-crimson hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer" title="Xóa ca học">
+                                                                <button type="button" onclick="confirmDelete(@b.MaBuoiHoc, '@($"#BH{b.MaBuoiHoc:D2}") - @(b.LopHoc?.TenLop ?? "") (@b.PhongHoc)')" class="w-5.5 h-5.5 rounded text-outline hover:text-danger-crimson hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer" title="Xóa ca học">
                                                                     <span class="material-symbols-outlined text-[13px]">delete</span>
                                                                 </button>
                                                             </div>
@@ -538,7 +538,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                                         <input class="rounded border-border-standard text-primary focus:ring-primary h-4 w-4 row-checkbox cursor-pointer" type="checkbox"/>
                                     </td>
                                     <td class="py-4 px-4 font-mono font-semibold text-primary">
-                                        #BH@item.MaBuoiHoc.ToString("D3")
+                                        @($"#BH{item.MaBuoiHoc:D3}")
                                     </td>
                                     <td class="py-4 px-4">
                                         <div class="font-label-md text-label-md text-brand-deep font-semibold">
@@ -602,7 +602,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                                             <button onclick="openEditDrawerFromRow(this)" class="p-1.5 rounded-lg text-outline hover:text-secondary-container hover:bg-surface-container-low transition-colors cursor-pointer" title="Chỉnh sửa">
                                                 <span class="material-symbols-outlined text-[18px]">edit</span>
                                             </button>
-                                            <button onclick="confirmDelete(@item.MaBuoiHoc, '#BH@item.MaBuoiHoc.ToString("D3") - @(item.LopHoc?.TenLop ?? "") (@item.PhongHoc)')" class="p-1.5 rounded-lg text-outline hover:text-danger-crimson hover:bg-red-50 transition-colors cursor-pointer" title="Xóa buổi học">
+                                            <button onclick="confirmDelete(@item.MaBuoiHoc, '@($"#BH{item.MaBuoiHoc:D3}") - @(item.LopHoc?.TenLop ?? "") (@item.PhongHoc)')" class="p-1.5 rounded-lg text-outline hover:text-danger-crimson hover:bg-red-50 transition-colors cursor-pointer" title="Xóa buổi học">
                                                 <span class="material-symbols-outlined text-[18px]">delete</span>
                                             </button>
                                         </div>
