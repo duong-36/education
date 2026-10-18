@@ -105,8 +105,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             ViewBag.LopHocList = await _context.LopHocs.ToListAsync();
             var allSessions = await _context.BuoiHocs.Include(b => b.LopHoc).ToListAsync();
             ViewBag.AllBuoiHocs = allSessions;
-            ViewBag.SoThi = allSessions.Count(b => b.NoiDung != null && (b.NoiDung.ToLower().Contains("thi") || b.NoiDung.ToLower().Contains("kiểm tra")));
-            ViewBag.SoChinhKhoa = allSessions.Count(b => b.TrangThai != "Đã hủy");
+            var activeSessions = allSessions.Where(b => b.TrangThai != "Đã hủy").ToList();
+            ViewBag.SoThi = activeSessions.Count(b => b.NoiDung != null && (b.NoiDung.ToLower().Contains("thi") || b.NoiDung.ToLower().Contains("kiểm tra")));
+            ViewBag.SoChinhKhoa = activeSessions.Count(b => b.NoiDung == null || (!b.NoiDung.ToLower().Contains("thi") && !b.NoiDung.ToLower().Contains("kiểm tra")));
             ViewBag.DanhSachPhong = allSessions.Select(b => b.PhongHoc).Where(p => !string.IsNullOrEmpty(p)).Distinct().ToList();
             ViewBag.DanhSachGiangVien = allSessions.Select(b => b.GiangVien).Where(g => !string.IsNullOrEmpty(g)).Distinct().ToList();
 
@@ -123,9 +124,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BuoiHoc buoiHoc)
         {
-            // 1. Kiểm tra lớp có ít nhất 1 đăng ký "Đã đóng học phí" không?
+            // 1. Kiểm tra lớp có ít nhất 1 đăng ký "Đã đóng học phí" hoặc "Đang học" không?
             bool coHocVienDongHocPhi = _context.DangKyHocs
-                .Any(dk => dk.MaLop == buoiHoc.MaLop && dk.TrangThai == "Đã đóng học phí");
+                .Any(dk => dk.MaLop == buoiHoc.MaLop && (dk.TrangThai == "Đã đóng học phí" || dk.TrangThai == "Đang học"));
             
             if (!coHocVienDongHocPhi)
             {
