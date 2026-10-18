@@ -1,0 +1,119 @@
+@*
+Họ và tên: Nguyễn Tùng Dương
+Mã sinh viên: 23103100003
+Nội dung thực hiện: Modal xác nhận xóa dùng chung toàn bộ hệ thống chuẩn phong cách Prep.vn (Module 5)
+*@
+
+<!-- GLOBAL PREP.VN DELETE CONFIRMATION MODAL -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-deep/40 backdrop-blur-xs hidden transition-all duration-300" id="global-delete-modal">
+    <div class="bg-surface-white max-w-md w-full rounded-2xl shadow-2xl border border-border-subtle p-6 space-y-4 animate-scale-up" onclick="event.stopPropagation()">
+        <!-- Icon Container -->
+        <div class="w-12 h-12 rounded-2xl bg-[#EF4444]/10 text-danger-crimson flex items-center justify-center">
+            <span class="material-symbols-outlined text-[28px]" id="global-delete-icon">delete_forever</span>
+        </div>
+
+        <!-- Title & Description -->
+        <div class="space-y-1.5">
+            <h3 class="font-headline-sm text-headline-sm text-brand-deep font-bold" id="global-delete-title">
+                Xác nhận xóa?
+            </h3>
+            <p class="font-body-sm text-body-sm text-outline leading-relaxed" id="global-delete-msg">
+                Bạn có chắc chắn muốn xóa bản ghi này?
+            </p>
+        </div>
+
+        <!-- Warning Alert Box -->
+        <div class="bg-error-container/30 border border-danger-crimson/20 rounded-xl p-3 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-danger-crimson text-[18px] flex-shrink-0 mt-0.5">warning</span>
+            <span class="font-body-sm text-[12px] text-danger-crimson font-medium" id="global-delete-warning">
+                Hành động này mang tính vĩnh viễn và không thể hoàn tác sau khi xác nhận.
+            </span>
+        </div>
+
+        <!-- Action Form -->
+        <form method="post" id="global-delete-form" action="">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="global-delete-id" value="0"/>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" class="border border-border-standard text-brand-deep px-4 py-2 rounded-xl font-label-md text-label-md hover:bg-surface-container-low transition-colors cursor-pointer" onclick="closeGlobalDeleteModal()">
+                    Hủy bỏ
+                </button>
+                <button type="submit" id="global-delete-submit-btn" class="bg-danger-crimson hover:bg-[#d93838] text-surface-white px-4 py-2 rounded-xl font-label-md text-label-md shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                    <span id="global-delete-btn-text">Xóa vĩnh viễn</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Universal Prep.vn Delete Modal Helper
+    window.openGlobalDeleteModal = function(options) {
+        options = options || {};
+        const modal = document.getElementById('global-delete-modal');
+        if (!modal) return;
+
+        const form = document.getElementById('global-delete-form');
+        const idInput = document.getElementById('global-delete-id');
+        const titleEl = document.getElementById('global-delete-title');
+        const msgEl = document.getElementById('global-delete-msg');
+        const warningEl = document.getElementById('global-delete-warning');
+        const btnTextEl = document.getElementById('global-delete-btn-text');
+        const iconEl = document.getElementById('global-delete-icon');
+
+        if (options.action) form.action = options.action;
+        if (options.id !== undefined) idInput.value = options.id;
+        if (options.title) titleEl.innerText = options.title;
+
+        if (options.message) {
+            msgEl.innerHTML = options.message;
+        } else if (options.itemName) {
+            msgEl.innerHTML = `Bạn có chắc chắn muốn xóa <span class="font-semibold text-brand-deep">${options.itemName}</span>? Tất cả dữ liệu liên quan sẽ bị gián đoạn.`;
+        } else {
+            msgEl.innerText = 'Bạn có chắc chắn muốn xóa bản ghi này?';
+        }
+
+        if (options.warning) warningEl.innerText = options.warning;
+        if (options.submitText) btnTextEl.innerText = options.submitText;
+        if (options.icon) iconEl.innerText = options.icon;
+
+        modal.classList.remove('hidden');
+    };
+
+    window.closeGlobalDeleteModal = function() {
+        const modal = document.getElementById('global-delete-modal');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    // Global listener for backdrop click & data-attribute triggers
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('global-delete-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeGlobalDeleteModal();
+                }
+            });
+        }
+
+        // Auto-handle any elements with class .btn-open-delete-modal
+        document.addEventListener('click', (e) => {
+            const trigger = e.target.closest('.btn-open-delete-modal');
+            if (trigger) {
+                e.preventDefault();
+                openGlobalDeleteModal({
+                    action: trigger.dataset.deleteAction,
+                    id: trigger.dataset.deleteId,
+                    title: trigger.dataset.deleteTitle,
+                    itemName: trigger.dataset.deleteName,
+                    message: trigger.dataset.deleteMessage,
+                    warning: trigger.dataset.deleteWarning,
+                    submitText: trigger.dataset.deleteSubmit,
+                    icon: trigger.dataset.deleteIcon
+                });
+            }
+        });
+    });
+</script>

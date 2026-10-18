@@ -524,44 +524,10 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
     </div>
 </div>
 
-<!-- OVERLAY: DELETE CONFIRMATION MODAL -->
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-deep/40 backdrop-blur-xs hidden" id="delete-modal">
-    <div class="bg-surface-white max-w-md w-full rounded-2xl shadow-2xl border border-border-subtle p-6 space-y-4">
-        <div class="w-12 h-12 rounded-2xl bg-red-100 text-danger-crimson flex items-center justify-center">
-            <span class="material-symbols-outlined text-[28px]">delete_forever</span>
-        </div>
-        <div class="space-y-1.5">
-            <h3 class="font-headline-sm text-headline-sm text-brand-deep">Xóa kết quả học tập này?</h3>
-            <p class="font-body-sm text-body-sm text-outline leading-relaxed" id="delete-modal-msg">
-                Bạn có chắc chắn muốn xóa bản ghi điểm này?
-            </p>
-        </div>
-        <div class="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2.5">
-            <span class="material-symbols-outlined text-danger-crimson text-[18px] flex-shrink-0 mt-0.5">warning</span>
-            <span class="font-body-sm text-[12px] text-danger-crimson font-medium">Hành động này mang tính vĩnh viễn và không thể hoàn tác sau khi xác nhận.</span>
-        </div>
-        
-        <form method="post" action="/KetQuaHocTap/DeletePost" id="delete-form">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="id" id="delete-id" value="0"/>
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" class="border border-border-standard text-brand-deep px-4 py-2 rounded-xl font-label-md text-label-md hover:bg-surface-container-low transition-colors cursor-pointer" onclick="closeDeleteModal()">
-                    Hủy bỏ
-                </button>
-                <button type="submit" class="bg-danger-crimson hover:bg-[#d93838] text-surface-white px-4 py-2 rounded-xl font-label-md text-label-md shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">delete</span>
-                    <span>Xóa vĩnh viễn</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
-    // Micro-interactions for Drawer and Modal
+    // Micro-interactions for Drawer and Global Modal
     const drawer = document.getElementById('drawer-container');
     const drawerForm = document.getElementById('drawer-form');
-    const deleteModal = document.getElementById('delete-modal');
 
     function openDrawer(mode) {
         drawer.classList.remove('hidden');
@@ -643,13 +609,15 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
     }
 
     function confirmDelete(id, studentInfo) {
-        document.getElementById('delete-id').value = id;
-        document.getElementById('delete-modal-msg').innerHTML = `Bạn có chắc chắn muốn xóa bản ghi kết quả của <strong class="text-brand-deep">${studentInfo}</strong>?`;
-        deleteModal.classList.remove('hidden');
-    }
-
-    function closeDeleteModal() {
-        deleteModal.classList.add('hidden');
+        openGlobalDeleteModal({
+            action: '/KetQuaHocTap/DeletePost',
+            id: id,
+            title: 'Xóa kết quả học tập này?',
+            itemName: studentInfo,
+            message: `Bạn có chắc chắn muốn xóa bản ghi kết quả của <strong class="text-brand-deep">${studentInfo}</strong>? Tất cả dữ liệu điểm thành phần và nhận xét đánh giá liên quan sẽ bị loại bỏ.`,
+            warning: 'Hành động này mang tính vĩnh viễn và không thể hoàn tác sau khi xác nhận.',
+            submitText: 'Xóa vĩnh viễn'
+        });
     }
 
     // Select-all Checkbox
