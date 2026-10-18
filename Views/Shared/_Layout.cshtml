@@ -16,6 +16,26 @@
             main > :last-child { margin-bottom: 0 !important; }
         }
         ::-webkit-scrollbar { display: none; }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: block !important;
+            height: 7px !important;
+            width: 7px !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #0052cc;
+        }
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #F1F5F9;
+        }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script id="tailwind-config">
