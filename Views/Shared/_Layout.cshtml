@@ -298,6 +298,51 @@
         });
     </script>
 
+    <!-- Global Prep.vn Toast Notification Container -->
+    <div id="global-toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <script>
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('global-toast-container');
+            if (!container) return;
+
+            const isSuccess = type === 'success';
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl border transition-all duration-300 transform -translate-y-2 opacity-0 ${
+                isSuccess 
+                    ? 'bg-emerald-50/95 border-emerald-200 text-emerald-900 backdrop-blur-sm' 
+                    : 'bg-red-50/95 border-red-200 text-danger-crimson backdrop-blur-sm'
+            }`;
+
+            toast.innerHTML = `
+                <div class="flex items-center gap-2.5">
+                    <span class="material-symbols-outlined text-[22px] flex-shrink-0 ${isSuccess ? 'text-success-emerald' : 'text-danger-crimson'}">
+                        ${isSuccess ? 'check_circle' : 'error'}
+                    </span>
+                    <span class="font-label-md text-label-md font-semibold leading-snug break-words">${message}</span>
+                </div>
+                <button type="button" class="ml-3 text-outline hover:text-brand-deep cursor-pointer flex-shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            `;
+
+            const closeBtn = toast.querySelector('button');
+            const removeToast = () => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            };
+            closeBtn.onclick = removeToast;
+
+            container.appendChild(toast);
+            void toast.offsetWidth; // trigger reflow
+            toast.classList.remove('opacity-0', '-translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(removeToast, isSuccess ? 4000 : 6000);
+        };
+    </script>
+
     <!-- Global Prep.vn Delete Confirmation Modal for all pages -->
     <partial name="_DeleteModal" />
 

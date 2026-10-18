@@ -61,7 +61,7 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
     </div>
 }
 
-<div class="flex flex-col gap-y-6">
+<div id="ketqua-content-area" class="flex flex-col gap-y-6 transition-opacity duration-200">
     <!-- Contextual Sub-Header & Controls -->
     <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-white p-5 rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)]">
         <div class="flex items-center gap-space-sm min-w-0">
@@ -153,14 +153,14 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
 
     <!-- Filter & Operation Toolbar -->
     <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
-        <form method="get" action="/KetQuaHocTap/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form">
+        <form method="get" action="/KetQuaHocTap/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form" onsubmit="event.preventDefault(); filterKetQuaAjax();">
             <!-- Search Field -->
             <div class="relative flex-1 sm:w-80">
                 <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
                 <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-8 py-2 rounded-xl text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="table-search" placeholder="Tìm theo tên SV, mã SV, lớp học..." type="text"/>
                 @if (!string.IsNullOrEmpty(search))
                 {
-                    <a href="/KetQuaHocTap/Index" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+                    <a href="/KetQuaHocTap/Index" onclick="event.preventDefault(); loadKetQuaPage('/KetQuaHocTap/Index');" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface cursor-pointer">
                         <span class="material-symbols-outlined text-[16px]">cancel</span>
                     </a>
                 }
@@ -168,7 +168,7 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
 
             <!-- Filter Dropdown: Lớp học -->
             <div class="relative">
-                <select name="maLop" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                <select name="maLop" onchange="filterKetQuaAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
                     <option value="">Tất cả Lớp học</option>
                     @foreach (var lop in lopHocs)
                     {
@@ -180,7 +180,7 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
 
             <!-- Filter Dropdown: Kết quả -->
             <div class="relative">
-                <select name="ketQua" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                <select name="ketQua" onchange="filterKetQuaAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
                     <option value="">Kết quả: Tất cả</option>
                     <!option value="Hoàn thành" @(selectedKetQua == "Hoàn thành" ? "selected" : "")>● Hoàn thành (Đạt)</!option>
                     <!option value="Không hoàn thành" @(selectedKetQua == "Không hoàn thành" ? "selected" : "")>○ Không hoàn thành</!option>
@@ -190,7 +190,7 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
         </form>
 
         <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
-            <a href="/KetQuaHocTap/Index" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors" title="Làm mới bảng">
+            <a href="/KetQuaHocTap/Index" onclick="event.preventDefault(); loadKetQuaPage(this.href);" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors cursor-pointer" title="Làm mới bảng">
                 <span class="material-symbols-outlined text-[20px] block">refresh</span>
             </a>
             <button onclick="openDrawer('create')" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
@@ -339,7 +339,8 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
             </div>
             <div class="flex items-center gap-1.5">
                 <a href="/KetQuaHocTap/Index?page=@(currentPage - 1)&maLop=@selectedMaLop&ketQua=@selectedKetQua&search=@search" 
-                   class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage <= 1 ? "opacity-40 pointer-events-none" : "")">
+                   onclick="event.preventDefault(); loadKetQuaPage(this.href)"
+                   class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low transition-colors cursor-pointer @(currentPage <= 1 ? "opacity-40 pointer-events-none" : "")">
                     <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                 </a>
                 @for (int p = 1; p <= totalPages; p++)
@@ -351,7 +352,8 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
                     else if (p <= 3 || p == totalPages || Math.Abs(p - currentPage) <= 1)
                     {
                         <a href="/KetQuaHocTap/Index?page=@p&maLop=@selectedMaLop&ketQua=@selectedKetQua&search=@search" 
-                           class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-surface-container-low font-label-md text-label-md flex items-center justify-center">@p</a>
+                           onclick="event.preventDefault(); loadKetQuaPage(this.href)"
+                           class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-surface-container-low font-label-md text-label-md flex items-center justify-center transition-colors cursor-pointer">@p</a>
                     }
                     else if (p == 4 && totalPages > 5)
                     {
@@ -359,7 +361,8 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
                     }
                 }
                 <a href="/KetQuaHocTap/Index?page=@(currentPage + 1)&maLop=@selectedMaLop&ketQua=@selectedKetQua&search=@search" 
-                   class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage >= totalPages ? "opacity-40 pointer-events-none" : "")">
+                   onclick="event.preventDefault(); loadKetQuaPage(this.href)"
+                   class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low transition-colors cursor-pointer @(currentPage >= totalPages ? "opacity-40 pointer-events-none" : "")">
                     <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                 </a>
             </div>
@@ -620,10 +623,116 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
         });
     }
 
-    // Select-all Checkbox
-    document.getElementById('select-all')?.addEventListener('change', function(e) {
-        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
+    // Filter KetQua via AJAX without reloading page
+    function filterKetQuaAjax() {
+        const form = document.getElementById('filter-form');
+        if (!form) return;
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        params.set('page', '1');
+        const url = `/KetQuaHocTap/Index?${params.toString()}`;
+        loadKetQuaPage(url);
+    }
+
+    // Universal AJAX Page Loader for KetQuaHocTap (Pagination, Filter, Refresh)
+    async function loadKetQuaPage(url, pushState = true) {
+        const area = document.getElementById('ketqua-content-area');
+        if (area) {
+            area.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newContent = doc.getElementById('ketqua-content-area');
+            if (newContent && area) {
+                area.innerHTML = newContent.innerHTML;
+                bindSelectAll();
+            }
+
+            if (pushState) {
+                window.history.pushState({ url: url }, '', url);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải trang AJAX:', err);
+            window.location.href = url;
+        } finally {
+            if (area) {
+                area.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+    }
+
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.url) {
+            loadKetQuaPage(e.state.url, false);
+        } else {
+            loadKetQuaPage(window.location.href, false);
+        }
     });
+
+    // Handle AJAX Delete Callback
+    window.onDeleteSuccess = function(data) {
+        loadKetQuaPage(window.location.href, false);
+    };
+
+    // AJAX Form Submission for Right Drawer (Create & Edit)
+    if (drawerForm) {
+        drawerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = drawerForm.querySelector('button[type="submit"]');
+            const submitText = document.getElementById('drawer-submit-text');
+            const originalText = submitText ? submitText.innerText : 'Lưu kết quả';
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitText) submitText.innerText = 'Đang xử lý...';
+
+            try {
+                const formData = new FormData(drawerForm);
+                const res = await fetch(drawerForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const data = await res.json();
+                    if (data.success) {
+                        closeDrawer();
+                        if (window.showToast) window.showToast(data.message, 'success');
+                        await loadKetQuaPage(window.location.href, false);
+                    } else {
+                        if (window.showToast) window.showToast(data.message, 'error');
+                    }
+                } else {
+                    closeDrawer();
+                    await loadKetQuaPage(window.location.href, false);
+                }
+            } catch (err) {
+                console.error('Lỗi khi gửi form kết quả:', err);
+                if (window.showToast) window.showToast('Có lỗi xảy ra khi lưu kết quả.', 'error');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitText) submitText.innerText = originalText;
+            }
+        });
+    }
+
+    // Select-all Checkbox helper
+    function bindSelectAll() {
+        const selectAll = document.getElementById('select-all');
+        if (selectAll) {
+            selectAll.onchange = function(e) {
+                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
+            };
+        }
+    }
+    bindSelectAll();
 
     // Client-side CSV Exporter
     function exportTableToCSV(filename) {

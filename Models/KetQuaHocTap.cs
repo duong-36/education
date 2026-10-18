@@ -33,6 +33,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models
         public DateTime NgayCapNhat { get; set; }
 
         [ForeignKey("MaDangKy")]
-        public virtual DangKyHoc DangKyHoc { get; set; }
+        public virtual DangKyHoc? DangKyHoc { get; set; }
     }
 }

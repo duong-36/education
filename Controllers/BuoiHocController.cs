@@ -124,6 +124,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BuoiHoc buoiHoc)
         {
+            ModelState.Remove("LopHoc");
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             // 1. Kiểm tra lớp có ít nhất 1 đăng ký "Đã đóng học phí" hoặc "Đang học" không?
             bool coHocVienDongHocPhi = _context.DangKyHocs
                 .Any(dk => dk.MaLop == buoiHoc.MaLop && (dk.TrangThai == "Đã đóng học phí" || dk.TrangThai == "Đang học"));
@@ -173,11 +176,20 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 if (string.IsNullOrEmpty(buoiHoc.TrangThai)) buoiHoc.TrangThai = "Đã lên lịch";
                 _context.Add(buoiHoc);
                 await _context.SaveChangesAsync();
+                if (isAjax)
+                {
+                    return Json(new { success = true, message = "Xếp lịch học thành công!" });
+                }
                 TempData["Success"] = "Xếp lịch học thành công!";
                 return RedirectToAction(nameof(Index));
             }
             
-            TempData["Error"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            string errorMsg = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            if (isAjax)
+            {
+                return Json(new { success = false, message = errorMsg });
+            }
+            TempData["Error"] = errorMsg;
             return RedirectToAction(nameof(Index));
         }
 
@@ -186,15 +198,20 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditPost(BuoiHoc buoiHoc)
         {
+            ModelState.Remove("LopHoc");
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             var existing = await _context.BuoiHocs.FindAsync(buoiHoc.MaBuoiHoc);
             if (existing == null)
             {
+                if (isAjax) return Json(new { success = false, message = "Không tìm thấy buổi học cần chỉnh sửa." });
                 TempData["Error"] = "Không tìm thấy buổi học cần chỉnh sửa.";
                 return RedirectToAction(nameof(Index));
             }
 
             if (buoiHoc.ThoiGianKetThuc <= buoiHoc.ThoiGianBatDau)
             {
+                if (isAjax) return Json(new { success = false, message = "Thời gian kết thúc phải sau thời gian bắt đầu." });
                 TempData["Error"] = "Thời gian kết thúc phải sau thời gian bắt đầu.";
                 return RedirectToAction(nameof(Index));
             }
@@ -209,6 +226,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 
             if (isTrungLich)
             {
+                if (isAjax) return Json(new { success = false, message = "Cập nhật thất bại: Trùng lịch với ca học khác (trùng phòng, giảng viên hoặc lớp)!" });
                 TempData["Error"] = "Cập nhật thất bại: Trùng lịch với ca học khác (trùng phòng, giảng viên hoặc lớp)!";
                 return RedirectToAction(nameof(Index));
             }
@@ -223,6 +241,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             existing.TrangThai = buoiHoc.TrangThai ?? existing.TrangThai;
 
             await _context.SaveChangesAsync();
+            if (isAjax) return Json(new { success = true, message = "Cập nhật buổi học thành công!" });
             TempData["Success"] = "Cập nhật buổi học thành công!";
             return RedirectToAction(nameof(Index));
         }
@@ -232,15 +251,18 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePost(int id)
         {
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var buoiHoc = await _context.BuoiHocs.FindAsync(id);
             if (buoiHoc == null)
             {
+                if (isAjax) return Json(new { success = false, message = "Không tìm thấy buổi học để xóa." });
                 TempData["Error"] = "Không tìm thấy buổi học để xóa.";
                 return RedirectToAction(nameof(Index));
             }
 
             _context.BuoiHocs.Remove(buoiHoc);
             await _context.SaveChangesAsync();
+            if (isAjax) return Json(new { success = true, message = "Đã xóa vĩnh viễn buổi học khỏi hệ thống." });
             TempData["Success"] = "Đã xóa vĩnh viễn buổi học khỏi hệ thống.";
             return RedirectToAction(nameof(Index));
         }
@@ -249,17 +271,24 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [HttpPost]
         public async Task<IActionResult> HoanThanh(int id)
         {
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var buoiHoc = await _context.BuoiHocs.FindAsync(id);
-            if (buoiHoc == null) return NotFound();
+            if (buoiHoc == null)
+            {
+                if (isAjax) return Json(new { success = false, message = "Không tìm thấy buổi học." });
+                return NotFound();
+            }
 
             if (buoiHoc.TrangThai == "Đã hủy")
             {
+                if (isAjax) return Json(new { success = false, message = "Không thể hoàn thành buổi học đã hủy." });
                 TempData["Error"] = "Không thể hoàn thành buổi học đã hủy.";
                 return RedirectToAction(nameof(Index));
             }
             
             if (buoiHoc.ThoiGianKetThuc > DateTime.Now)
             {
+                if (isAjax) return Json(new { success = false, message = "Buổi học chưa kết thúc (hoặc chưa diễn ra), không thể đánh dấu hoàn thành." });
                 TempData["Error"] = "Buổi học chưa kết thúc (hoặc chưa diễn ra), không thể đánh dấu hoàn thành.";
                 return RedirectToAction(nameof(Index));
             }
@@ -267,6 +296,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             buoiHoc.TrangThai = "Đã hoàn thành";
             await _context.SaveChangesAsync();
             
+            if (isAjax) return Json(new { success = true, message = "Đã cập nhật trạng thái hoàn thành thành công." });
             TempData["Success"] = "Đã cập nhật trạng thái hoàn thành thành công.";
             return RedirectToAction(nameof(Index));
         }
@@ -274,12 +304,18 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [HttpPost]
         public async Task<IActionResult> Huy(int id)
         {
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var buoiHoc = await _context.BuoiHocs.FindAsync(id);
-            if (buoiHoc == null) return NotFound();
+            if (buoiHoc == null)
+            {
+                if (isAjax) return Json(new { success = false, message = "Không tìm thấy buổi học." });
+                return NotFound();
+            }
 
             buoiHoc.TrangThai = "Đã hủy";
             await _context.SaveChangesAsync();
             
+            if (isAjax) return Json(new { success = true, message = "Đã hủy ca học thành công." });
             TempData["Success"] = "Đã hủy ca học thành công.";
             return RedirectToAction(nameof(Index));
         }

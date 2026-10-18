@@ -39,6 +39,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models
         public string TrangThai { get; set; } // Đã lên lịch, Đã hoàn thành, Đã hủy
 
         [ForeignKey("MaLop")]
-        public virtual LopHoc LopHoc { get; set; }
+        public virtual LopHoc? LopHoc { get; set; }
     }
 }

@@ -93,7 +93,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
     </div>
 }
 
-<div class="flex flex-col gap-y-6">
+<div id="buoihoc-content-area" class="flex flex-col gap-y-6 transition-opacity duration-200">
     <!-- Contextual Sub-Header & Controls -->
     <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-white p-5 rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)]">
         <div class="flex items-center gap-space-sm min-w-0">
@@ -430,14 +430,14 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
     <div id="view-table" class="hidden flex flex-col gap-6">
         <!-- Filter & Operation Toolbar -->
         <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
-            <form method="get" action="/BuoiHoc/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form">
+            <form method="get" action="/BuoiHoc/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form" onsubmit="event.preventDefault(); filterBuoiHocAjax();">
                 <!-- Search Field -->
                 <div class="relative flex-1 sm:w-72">
                     <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
                     <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-8 py-2 rounded-xl text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="table-search" placeholder="Tìm theo giảng viên, phòng, lớp..." type="text"/>
                     @if (!string.IsNullOrEmpty(search))
                     {
-                        <a href="/BuoiHoc/Index" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+                        <a href="/BuoiHoc/Index" onclick="event.preventDefault(); loadBuoiHocPage('/BuoiHoc/Index');" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface cursor-pointer">
                             <span class="material-symbols-outlined text-[16px]">cancel</span>
                         </a>
                     }
@@ -445,7 +445,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
 
                 <!-- Filter Dropdown: Lớp học -->
                 <div class="relative">
-                    <select name="maLop" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                    <select name="maLop" onchange="filterBuoiHocAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
                         <option value="">Tất cả Lớp học</option>
                         @foreach (var lop in lopHocs)
                         {
@@ -457,7 +457,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
 
                 <!-- Filter Dropdown: Phòng học -->
                 <div class="relative">
-                    <select name="phong" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                    <select name="phong" onchange="filterBuoiHocAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
                         <option value="">Tất cả Phòng học</option>
                         @foreach (var p in danhSachPhong)
                         {
@@ -469,7 +469,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
 
                 <!-- Filter Dropdown: Trạng thái -->
                 <div class="relative">
-                    <select name="trangThai" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                    <select name="trangThai" onchange="filterBuoiHocAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
                         <option value="">Trạng thái: Tất cả</option>
                         <!option value="Đã lên lịch" @(selectedTrangThai == "Đã lên lịch" ? "selected" : "")>● Đã lên lịch</!option>
                         <!option value="Đã hoàn thành" @(selectedTrangThai == "Đã hoàn thành" ? "selected" : "")>● Đã hoàn thành</!option>
@@ -480,7 +480,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
             </form>
 
             <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
-                <a href="/BuoiHoc/Index" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors" title="Làm mới bảng">
+                <a href="/BuoiHoc/Index" onclick="event.preventDefault(); loadBuoiHocPage(this.href);" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors cursor-pointer" title="Làm mới bảng">
                     <span class="material-symbols-outlined text-[20px] block">refresh</span>
                 </a>
                 <button onclick="openDrawer('create')" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
@@ -621,7 +621,8 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                 </div>
                 <div class="flex items-center gap-1.5">
                     <a href="/BuoiHoc/Index?page=@(currentPage - 1)&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
-                       class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage <= 1 ? "opacity-40 pointer-events-none" : "")">
+                       onclick="event.preventDefault(); loadBuoiHocPage(this.href)"
+                       class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low transition-colors cursor-pointer @(currentPage <= 1 ? "opacity-40 pointer-events-none" : "")">
                         <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                     </a>
                     @for (int p = 1; p <= totalPages; p++)
@@ -633,7 +634,8 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                         else if (p <= 3 || p == totalPages || Math.Abs(p - currentPage) <= 1)
                         {
                             <a href="/BuoiHoc/Index?page=@p&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
-                               class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-surface-container-low font-label-md text-label-md flex items-center justify-center">@p</a>
+                               onclick="event.preventDefault(); loadBuoiHocPage(this.href)"
+                               class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-surface-container-low font-label-md text-label-md flex items-center justify-center transition-colors cursor-pointer">@p</a>
                         }
                         else if (p == 4 && totalPages > 5)
                         {
@@ -641,7 +643,8 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                         }
                     }
                     <a href="/BuoiHoc/Index?page=@(currentPage + 1)&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
-                       class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage >= totalPages ? "opacity-40 pointer-events-none" : "")">
+                       onclick="event.preventDefault(); loadBuoiHocPage(this.href)"
+                       class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low transition-colors cursor-pointer @(currentPage >= totalPages ? "opacity-40 pointer-events-none" : "")">
                         <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                     </a>
                 </div>
@@ -792,11 +795,14 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
 
 <script>
     // Tab View Switcher (Timetable vs Table)
+    window.currentViewMode = 'timetable';
     function switchView(mode) {
+        window.currentViewMode = mode;
         const viewTimetable = document.getElementById('view-timetable');
         const viewTable = document.getElementById('view-table');
         const btnTimetable = document.getElementById('tab-btn-timetable');
         const btnTable = document.getElementById('tab-btn-table');
+        if (!viewTimetable || !viewTable || !btnTimetable || !btnTable) return;
 
         if (mode === 'timetable') {
             viewTimetable.classList.remove('hidden');
@@ -810,6 +816,61 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
             btnTimetable.className = 'px-3.5 py-1.5 rounded-lg text-outline hover:text-brand-deep transition-all flex items-center gap-1.5 cursor-pointer';
         }
     }
+
+    // Filter BuoiHoc via AJAX without reloading page
+    function filterBuoiHocAjax() {
+        const form = document.getElementById('filter-form');
+        if (!form) return;
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        params.set('page', '1');
+        const url = `/BuoiHoc/Index?${params.toString()}`;
+        loadBuoiHocPage(url);
+    }
+
+    // Universal AJAX Page Loader for BuoiHoc (Pagination, Filter, Refresh)
+    async function loadBuoiHocPage(url, pushState = true) {
+        const area = document.getElementById('buoihoc-content-area');
+        if (area) {
+            area.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newContent = doc.getElementById('buoihoc-content-area');
+            if (newContent && area) {
+                area.innerHTML = newContent.innerHTML;
+                switchView(window.currentViewMode || 'timetable');
+                bindSelectAll();
+            }
+
+            if (pushState) {
+                window.history.pushState({ url: url, viewMode: window.currentViewMode }, '', url);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải trang AJAX:', err);
+            window.location.href = url;
+        } finally {
+            if (area) {
+                area.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+    }
+
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.url) {
+            if (e.state.viewMode) window.currentViewMode = e.state.viewMode;
+            loadBuoiHocPage(e.state.url, false);
+        } else {
+            loadBuoiHocPage(window.location.href, false);
+        }
+    });
 
     // Smooth horizontal scroll for weekly timetable
     function scrollTimetable(offset) {
@@ -928,10 +989,63 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
         });
     }
 
-    // Select-all Checkbox
-    document.getElementById('select-all')?.addEventListener('change', function(e) {
-        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
-    });
+    // Handle AJAX Delete Callback
+    window.onDeleteSuccess = function(data) {
+        loadBuoiHocPage(window.location.href, false);
+    };
+
+    // AJAX Form Submission for Right Drawer (Create & Edit)
+    if (drawerForm) {
+        drawerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = drawerForm.querySelector('button[type="submit"]');
+            const submitText = document.getElementById('drawer-submit-text');
+            const originalText = submitText ? submitText.innerText : 'Lưu buổi học';
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitText) submitText.innerText = 'Đang xử lý...';
+
+            try {
+                const formData = new FormData(drawerForm);
+                const res = await fetch(drawerForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const data = await res.json();
+                    if (data.success) {
+                        closeDrawer();
+                        if (window.showToast) window.showToast(data.message, 'success');
+                        await loadBuoiHocPage(window.location.href, false);
+                    } else {
+                        if (window.showToast) window.showToast(data.message, 'error');
+                    }
+                } else {
+                    closeDrawer();
+                    await loadBuoiHocPage(window.location.href, false);
+                }
+            } catch (err) {
+                console.error('Lỗi khi gửi form buổi học:', err);
+                if (window.showToast) window.showToast('Có lỗi xảy ra khi lưu buổi học.', 'error');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitText) submitText.innerText = originalText;
+            }
+        });
+    }
+
+    // Select-all Checkbox helper
+    function bindSelectAll() {
+        const selectAll = document.getElementById('select-all');
+        if (selectAll) {
+            selectAll.onchange = function(e) {
+                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
+            };
+        }
+    }
+    bindSelectAll();
 
     // Client-side CSV Exporter
     function exportTableToCSV(filename) {

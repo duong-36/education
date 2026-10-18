@@ -115,5 +115,50 @@ Nội dung thực hiện: Modal xác nhận xóa dùng chung toàn bộ hệ th�
                 });
             }
         });
+
+        // AJAX submit handler for Global Delete Form
+        const deleteForm = document.getElementById('global-delete-form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', async function(e) {
+                if (typeof window.onDeleteSuccess === 'function') {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById('global-delete-submit-btn');
+                    const btnText = document.getElementById('global-delete-btn-text');
+                    const originalText = btnText ? btnText.innerText : 'Xóa vĩnh viễn';
+                    if (submitBtn) submitBtn.disabled = true;
+                    if (btnText) btnText.innerText = 'Đang xóa...';
+
+                    try {
+                        const formData = new FormData(deleteForm);
+                        const res = await fetch(deleteForm.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        
+                        const contentType = res.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            const data = await res.json();
+                            closeGlobalDeleteModal();
+                            if (data.success) {
+                                if (window.showToast) window.showToast(data.message, 'success');
+                                window.onDeleteSuccess(data);
+                            } else {
+                                if (window.showToast) window.showToast(data.message, 'error');
+                            }
+                        } else {
+                            closeGlobalDeleteModal();
+                            window.location.reload();
+                        }
+                    } catch (err) {
+                        console.error('Lỗi khi xóa:', err);
+                        if (window.showToast) window.showToast('Đã xảy ra lỗi khi thực hiện xóa.', 'error');
+                    } finally {
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (btnText) btnText.innerText = originalText;
+                    }
+                }
+            });
+        }
     });
 </script>

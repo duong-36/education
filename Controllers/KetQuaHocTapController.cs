@@ -114,6 +114,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(KetQuaHocTap kq)
         {
+            ModelState.Remove("DangKyHoc");
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             var dangKy = await _context.DangKyHocs
                 .Include(d => d.LopHoc)
                 .FirstOrDefaultAsync(d => d.MaDangKy == kq.MaDangKy);
@@ -156,11 +159,20 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                if (isAjax)
+                {
+                    return Json(new { success = true, message = "Ghi nhận kết quả học tập thành công!" });
+                }
                 TempData["Success"] = "Ghi nhận kết quả học tập thành công!";
                 return RedirectToAction(nameof(Index));
             }
 
-            TempData["Error"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            string errorMsg = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            if (isAjax)
+            {
+                return Json(new { success = false, message = errorMsg });
+            }
+            TempData["Error"] = errorMsg;
             return RedirectToAction(nameof(Index));
         }
 
@@ -169,18 +181,21 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditPost(int maKetQua, double diemChuyenCan, double diemCuoiKhoa, string? nhanXet, string? ketQua)
         {
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var kq = await _context.KetQuaHocTaps
                 .Include(k => k.DangKyHoc)
                 .FirstOrDefaultAsync(k => k.MaKetQua == maKetQua);
 
             if (kq == null)
             {
+                if (isAjax) return Json(new { success = false, message = "Không tìm thấy bản ghi kết quả học tập." });
                 TempData["Error"] = "Không tìm thấy bản ghi kết quả học tập.";
                 return RedirectToAction(nameof(Index));
             }
 
             if (diemChuyenCan < 0 || diemChuyenCan > 10 || diemCuoiKhoa < 0 || diemCuoiKhoa > 10)
             {
+                if (isAjax) return Json(new { success = false, message = "Điểm phải nằm trong khoảng từ 0 đến 10." });
                 TempData["Error"] = "Điểm phải nằm trong khoảng từ 0 đến 10.";
                 return RedirectToAction(nameof(Index));
             }
@@ -206,6 +221,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             }
 
             await _context.SaveChangesAsync();
+            if (isAjax) return Json(new { success = true, message = "Đã cập nhật thành công kết quả học tập!" });
             TempData["Success"] = "Đã cập nhật thành công kết quả học tập!";
             return RedirectToAction(nameof(Index));
         }
@@ -215,15 +231,18 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePost(int id)
         {
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var kq = await _context.KetQuaHocTaps.FindAsync(id);
             if (kq == null)
             {
+                if (isAjax) return Json(new { success = false, message = "Không tìm thấy kết quả học tập để xóa." });
                 TempData["Error"] = "Không tìm thấy kết quả học tập để xóa.";
                 return RedirectToAction(nameof(Index));
             }
 
             _context.KetQuaHocTaps.Remove(kq);
             await _context.SaveChangesAsync();
+            if (isAjax) return Json(new { success = true, message = "Đã xóa bản ghi kết quả học tập khỏi hệ thống." });
             TempData["Success"] = "Đã xóa bản ghi kết quả học tập khỏi hệ thống.";
             return RedirectToAction(nameof(Index));
         }
