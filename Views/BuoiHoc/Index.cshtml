@@ -1,18 +1,52 @@
 @*
 Họ và tên: Nguyễn Tùng Dương
 Mã sinh viên: 23103100003
-Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong cách Prep.vn
+Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biểu dạng tuần kết hợp CRUD chuẩn Prep.vn
 *@
 
 @model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc>
 @{
     ViewData["Title"] = "Quản lý lịch học";
+
+    Func<DateTime, int> getCa = (dt) => {
+        int h = dt.Hour;
+        if (h < 9 || (h == 9 && dt.Minute <= 20)) return 1;
+        if (h < 13) return 2;
+        if (h < 16) return 3;
+        return 4;
+    };
+
+    var days = new DayOfWeek[] {
+        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
+        DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday
+    };
+
+    var dayNames = new Dictionary<DayOfWeek, string> {
+        { DayOfWeek.Monday, "Thứ 2" },
+        { DayOfWeek.Tuesday, "Thứ 3" },
+        { DayOfWeek.Wednesday, "Thứ 4" },
+        { DayOfWeek.Thursday, "Thứ 5" },
+        { DayOfWeek.Friday, "Thứ 6" },
+        { DayOfWeek.Saturday, "Thứ 7" }
+    };
+
+    var caNames = new Dictionary<int, (string TenCa, string Gio, string Tiet)> {
+        { 1, ("Ca 1 (Sáng)", "07:00 - 09:15", "Tiết 1-3") },
+        { 2, ("Ca 2 (Sáng)", "09:30 - 11:45", "Tiết 4-6") },
+        { 3, ("Ca 3 (Chiều)", "13:30 - 15:45", "Tiết 7-9") },
+        { 4, ("Ca 4 (Chiều)", "16:00 - 18:15", "Tiết 10-12") }
+    };
+
     var conflictIds = ViewBag.ConflictIds as HashSet<int> ?? new HashSet<int>();
+    var allBuoiHocs = ViewBag.AllBuoiHocs as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc>();
+
     int totalSessions = ViewBag.TotalSessions ?? 0;
     int completedSessions = ViewBag.CompletedSessions ?? 0;
     int scheduledSessions = ViewBag.ScheduledSessions ?? 0;
     int canceledSessions = ViewBag.CanceledSessions ?? 0;
     int conflictCount = ViewBag.SoLoiTrung ?? 0;
+    int soChinhKhoa = ViewBag.SoChinhKhoa ?? 0;
+    int soThi = ViewBag.SoThi ?? 0;
 
     int currentPage = ViewBag.CurrentPage ?? 1;
     int totalPages = ViewBag.TotalPages ?? 1;
@@ -33,7 +67,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
     double completionRate = totalSessions > 0 ? Math.Round((double)completedSessions / totalSessions * 100, 1) : 0;
 }
 
-<!-- Alert Notification -->
+<!-- Flash Notifications -->
 @if (TempData["Success"] != null)
 {
     <div id="toast-success" class="mb-4 flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 shadow-sm animate-fade-in">
@@ -41,7 +75,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
             <span class="material-symbols-outlined text-success-emerald text-[22px]">check_circle</span>
             <span class="font-label-md text-label-md font-semibold">@TempData["Success"]</span>
         </div>
-        <button onclick="document.getElementById('toast-success').remove()" class="text-emerald-600 hover:text-emerald-900">
+        <button onclick="document.getElementById('toast-success').remove()" class="text-emerald-600 hover:text-emerald-900 cursor-pointer">
             <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
     </div>
@@ -53,7 +87,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
             <span class="material-symbols-outlined text-danger-crimson text-[22px]">error</span>
             <span class="font-label-md text-label-md font-semibold">@TempData["Error"]</span>
         </div>
-        <button onclick="document.getElementById('toast-error').remove()" class="text-red-500 hover:text-red-800">
+        <button onclick="document.getElementById('toast-error').remove()" class="text-red-500 hover:text-red-800 cursor-pointer">
             <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
     </div>
@@ -79,9 +113,21 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
         </div>
 
         <div class="flex items-center flex-wrap gap-2.5">
+            <!-- View Mode Switcher -->
+            <div class="flex p-1 bg-surface-container-low rounded-xl border border-border-subtle text-xs font-semibold">
+                <button type="button" id="tab-btn-timetable" onclick="switchView('timetable')" class="px-3.5 py-1.5 rounded-lg bg-surface-white text-primary-container font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-[16px]">calendar_view_week</span>
+                    <span>Thời khóa biểu tuần</span>
+                </button>
+                <button type="button" id="tab-btn-table" onclick="switchView('table')" class="px-3.5 py-1.5 rounded-lg text-outline hover:text-brand-deep transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-[16px]">table_rows</span>
+                    <span>Danh sách chi tiết</span>
+                </button>
+            </div>
+
             <button onclick="exportTableToCSV('danh-sach-lich-hoc.csv')" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer">
                 <span class="material-symbols-outlined text-[18px] text-primary">file_download</span>
-                <span class="hidden sm:inline">Xuất danh mục Excel</span>
+                <span class="hidden sm:inline">Xuất Excel</span>
             </button>
             <button onclick="openDrawer('create')" class="inline-flex items-center gap-1.5 bg-secondary-container hover:bg-secondary text-surface-white font-label-md text-label-md px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-transform active:scale-95 cursor-pointer">
                 <span class="material-symbols-outlined text-[18px]">add_circle</span>
@@ -157,225 +203,389 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
         </div>
     </div>
 
-    <!-- Filter & Operation Toolbar -->
-    <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
-        <form method="get" action="/BuoiHoc/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form">
-            <!-- Search Field -->
-            <div class="relative flex-1 sm:w-72">
-                <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
-                <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-8 py-2 rounded-xl text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="table-search" placeholder="Tìm theo giảng viên, phòng, lớp..." type="text"/>
-                @if (!string.IsNullOrEmpty(search))
-                {
-                    <a href="/BuoiHoc/Index" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
-                        <span class="material-symbols-outlined text-[16px]">cancel</span>
-                    </a>
-                }
+    <!-- ==================== VIEW 1: THỜI KHÓA BIỂU DẠNG TUẦN (MẶC ĐỊNH) ==================== -->
+    <div id="view-timetable" class="flex flex-col gap-5">
+        <!-- Timetable Summary Strip -->
+        <div class="bg-surface-white p-4 rounded-2xl border border-border-subtle shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-4 text-xs font-semibold flex-wrap">
+                <div class="flex items-center gap-1.5 text-on-surface-variant">
+                    <span class="w-2.5 h-2.5 rounded-md bg-primary-container"></span>
+                    <span>Chính khóa: <strong class="text-brand-deep font-mono">@soChinhKhoa</strong> ca</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-on-surface-variant">
+                    <span class="w-2.5 h-2.5 rounded-md bg-warning-amber"></span>
+                    <span>Thi / KT: <strong class="text-brand-deep font-mono">@soThi</strong> ca</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-on-surface-variant">
+                    <span class="w-2.5 h-2.5 rounded-md bg-danger-crimson"></span>
+                    <span>Xung đột phòng: <strong class="@(conflictCount > 0 ? "text-danger-crimson font-bold" : "text-brand-deep") font-mono">@conflictCount lỗi</strong></span>
+                </div>
             </div>
-
-            <!-- Filter Dropdown: Lớp học -->
-            <div class="relative">
-                <select name="maLop" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
-                    <option value="">Tất cả Lớp học</option>
-                    @foreach (var lop in lopHocs)
-                    {
-                        <!option value="@lop.MaLop" @(selectedMaLop == lop.MaLop ? "selected" : "")>@lop.TenLop</!option>
-                    }
-                </select>
-                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+            <div class="flex items-center gap-2 text-xs font-medium text-outline">
+                <span class="inline-flex items-center gap-1 text-success-emerald bg-success-emerald/10 px-2.5 py-1 rounded-full font-semibold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-success-emerald animate-pulse"></span> Ma trận tuần tự động từ DB
+                </span>
             </div>
+        </div>
 
-            <!-- Filter Dropdown: Phòng học -->
-            <div class="relative">
-                <select name="phong" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
-                    <option value="">Tất cả Phòng học</option>
-                    @foreach (var p in danhSachPhong)
-                    {
-                        <!option value="@p" @(selectedPhong == p ? "selected" : "")>@p</!option>
-                    }
-                </select>
-                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+        <!-- Weekly Timetable Grid Card -->
+        <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+            <div class="w-full overflow-x-auto">
+                <div class="min-w-[920px] flex flex-col">
+                    <!-- 1. Header: Days of Week (Thứ 2 -> Thứ 7) -->
+                    <div class="grid grid-cols-[130px_repeat(6,1fr)] bg-canvas-base border-b border-border-standard text-xs font-bold text-brand-deep sticky top-0 z-10">
+                        <div class="py-3 px-3 border-r border-border-standard text-outline text-center font-mono uppercase text-[11px] flex items-center justify-center">
+                            Ca / Khung giờ
+                        </div>
+                        @foreach (var day in days)
+                        {
+                            var isToday = DateTime.Now.DayOfWeek == day;
+                            <div class="py-3 px-3 border-r border-border-standard text-center @(isToday ? "bg-primary-container/10 border-b-2 border-b-primary-container" : "")">
+                                <div class="@(isToday ? "text-primary-container font-extrabold" : "text-brand-deep") text-[13px]">
+                                    @dayNames[day]
+                                </div>
+                                <span class="text-[10px] text-outline font-normal block mt-0.5">
+                                    @(isToday ? "• Hôm nay" : "Trong tuần")
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- 2. Grid Body: 4 Ca (Ca 1 -> Ca 4) -->
+                    <div class="flex flex-col divide-y divide-border-subtle">
+                        @for (int ca = 1; ca <= 4; ca++)
+                        {
+                            var caInfo = caNames[ca];
+                            <div class="grid grid-cols-[130px_repeat(6,1fr)] min-h-[140px] divide-x divide-border-subtle hover:bg-canvas-base/20 transition-colors">
+                                <!-- Shift Label Column -->
+                                <div class="p-3 bg-canvas-base/50 flex flex-col justify-center items-center text-center">
+                                    <span class="text-xs font-bold text-brand-deep">@caInfo.TenCa</span>
+                                    <span class="text-[11px] font-mono text-outline mt-1 font-semibold">@caInfo.Gio</span>
+                                    <span class="text-[10px] font-medium text-outline bg-surface-container-high px-2 py-0.5 rounded-full mt-1.5">@caInfo.Tiet</span>
+                                </div>
+
+                                <!-- 6 Days Columns -->
+                                @foreach (var day in days)
+                                {
+                                    var classesInSlot = allBuoiHocs
+                                        .Where(b => b.ThoiGianBatDau.DayOfWeek == day && getCa(b.ThoiGianBatDau) == ca && b.TrangThai != "Đã hủy")
+                                        .ToList();
+
+                                    var isConflict = classesInSlot.Count > 1 && classesInSlot.Any(b1 => classesInSlot.Any(b2 => b1 != b2 && (b1.PhongHoc == b2.PhongHoc || b1.GiangVien == b2.GiangVien)));
+                                    var isToday = DateTime.Now.DayOfWeek == day;
+
+                                    <div class="p-2 relative @(isToday ? "bg-primary-container/5" : "")">
+                                        @if (classesInSlot.Count == 0)
+                                        {
+                                            <div class="h-full flex items-center justify-center border-dashed border-border-standard/80 rounded-xl min-h-[110px] hover:border-primary-container/50 hover:bg-primary-container/5 transition-colors group">
+                                                <button type="button" onclick="quickAddScheduleSlot('@day', @ca)" class="text-[11px] text-outline/60 group-hover:text-primary-container font-semibold px-2 py-1 rounded transition-colors flex items-center gap-1 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-[14px]">add</span>
+                                                    <span>Trống</span>
+                                                </button>
+                                            </div>
+                                        }
+                                        else if (isConflict)
+                                        {
+                                            <!-- CONFLICT CARD -->
+                                            <div class="h-full bg-red-50 border-2 border-danger-crimson/50 text-red-950 rounded-xl p-3 text-xs shadow-sm flex flex-col justify-between gap-2 animate-pulse">
+                                                <div>
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <span class="inline-flex items-center gap-1 font-bold text-danger-crimson text-[11px]">
+                                                            <span class="material-symbols-outlined text-[15px]">warning</span>
+                                                            XUNG ĐỘT TRÙNG LỊCH
+                                                        </span>
+                                                        <span class="bg-red-200 text-danger-crimson font-bold text-[9px] px-1.5 py-0.5 rounded">Cần sửa</span>
+                                                    </div>
+                                                    <div class="font-bold text-danger-crimson text-xs leading-snug">
+                                                        Trùng tại phòng @classesInSlot.First().PhongHoc!
+                                                    </div>
+                                                    <div class="text-[11px] text-outline mt-1 truncate">
+                                                        @string.Join(", ", classesInSlot.Select(c => c.LopHoc?.TenLop ?? $"Lớp #{c.MaLop}"))
+                                                    </div>
+                                                </div>
+                                                <div class="pt-2 border-t border-red-200 flex items-center justify-between">
+                                                    <button type="button" onclick="openEditDrawerById(@classesInSlot.First().MaBuoiHoc)" class="text-[11px] text-primary-container font-bold hover:underline cursor-pointer">
+                                                        Đổi ca
+                                                    </button>
+                                                    <button type="button" onclick="confirmDelete(@classesInSlot.Last().MaBuoiHoc, 'Ca học trùng tại @classesInSlot.First().PhongHoc')" class="px-2 py-0.5 bg-danger-crimson hover:bg-red-700 text-surface-white font-bold rounded text-[10px] transition-colors shadow-xs cursor-pointer">
+                                                        Hủy ca trùng
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- NORMAL SCHEDULE CARD -->
+                                            @foreach (var b in classesInSlot)
+                                            {
+                                                bool isCompleted = b.TrangThai == "Đã hoàn thành";
+                                                <div class="h-full bg-surface-white border @(isCompleted ? "border-emerald-200 bg-emerald-50/20" : "border-border-standard") rounded-xl p-3 text-xs shadow-xs hover:shadow-md transition-all flex flex-col justify-between gap-2 group">
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-1">
+                                                            <span class="font-mono text-[10px] font-bold text-primary">#BH@b.MaBuoiHoc.ToString("D3")</span>
+                                                            @if (isCompleted)
+                                                            {
+                                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">Xong</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-primary/10 text-primary">Đã lên lịch</span>
+                                                            }
+                                                        </div>
+                                                        <div class="font-bold text-brand-deep text-xs leading-snug line-clamp-2">
+                                                            @(b.LopHoc?.TenLop ?? $"Lớp #{b.MaLop}")
+                                                        </div>
+                                                        <div class="flex items-center gap-1.5 mt-1 text-[11px] text-outline">
+                                                            <span class="material-symbols-outlined text-[13px]">person</span>
+                                                            <span class="truncate">@b.GiangVien</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="pt-2 border-t border-border-subtle flex items-center justify-between">
+                                                        <span class="inline-block bg-primary/10 text-primary font-bold font-mono px-2 py-0.5 rounded text-[10px]">
+                                                            @b.PhongHoc
+                                                        </span>
+                                                        <div class="flex items-center gap-1">
+                                                            <button type="button" onclick="openEditDrawerById(@b.MaBuoiHoc)" class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer" title="Sửa ca học">
+                                                                <span class="material-symbols-outlined text-[15px]">edit</span>
+                                                            </button>
+                                                            <button type="button" onclick="confirmDelete(@b.MaBuoiHoc, '#BH@b.MaBuoiHoc.ToString("D3") (@b.PhongHoc)')" class="p-1 rounded text-outline hover:text-danger-crimson hover:bg-red-50 transition-colors cursor-pointer" title="Xóa ca học">
+                                                                <span class="material-symbols-outlined text-[15px]">delete</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
-
-            <!-- Filter Dropdown: Trạng thái -->
-            <div class="relative">
-                <select name="trangThai" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
-                    <option value="">Trạng thái: Tất cả</option>
-                    <!option value="Đã lên lịch" @(selectedTrangThai == "Đã lên lịch" ? "selected" : "")>● Đã lên lịch</!option>
-                    <!option value="Đã hoàn thành" @(selectedTrangThai == "Đã hoàn thành" ? "selected" : "")>● Đã hoàn thành</!option>
-                    <!option value="Đã hủy" @(selectedTrangThai == "Đã hủy" ? "selected" : "")>○ Đã hủy</!option>
-                </select>
-                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
-            </div>
-        </form>
-
-        <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
-            <a href="/BuoiHoc/Index" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors" title="Làm mới bảng">
-                <span class="material-symbols-outlined text-[20px] block">refresh</span>
-            </a>
-            <button onclick="openDrawer('create')" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                <span>Tạo buổi mới</span>
-            </button>
         </div>
     </div>
 
-    <!-- Data Table Container -->
-    <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_1px_3px_rgba(0,22,86,0.04),0_8px_24px_-4px_rgba(0,22,86,0.06)] overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse" id="crud-table">
-                <thead>
-                    <tr class="bg-surface-container-low/70 border-b border-border-subtle font-label-sm text-label-sm text-outline tracking-wider uppercase">
-                        <th class="p-4 pl-6 w-12 text-center">
-                            <input class="rounded border-border-standard text-primary focus:ring-primary h-4 w-4 cursor-pointer" type="checkbox" id="select-all"/>
-                        </th>
-                        <th class="py-4 px-4">Mã ca</th>
-                        <th class="py-4 px-4 min-w-[200px]">Lớp học</th>
-                        <th class="py-4 px-4">Thời gian học</th>
-                        <th class="py-4 px-3 text-center">Phòng</th>
-                        <th class="py-4 px-4">Giảng viên</th>
-                        <th class="py-4 px-4">Trạng thái</th>
-                        <th class="py-4 px-6 text-right">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-border-subtle font-body-sm text-body-sm">
-                    @if (!Model.Any())
+    <!-- ==================== VIEW 2: BẢNG DANH SÁCH CHI TIẾT (CRUD TABLE) ==================== -->
+    <div id="view-table" class="hidden flex flex-col gap-6">
+        <!-- Filter & Operation Toolbar -->
+        <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+            <form method="get" action="/BuoiHoc/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form">
+                <!-- Search Field -->
+                <div class="relative flex-1 sm:w-72">
+                    <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
+                    <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-8 py-2 rounded-xl text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="table-search" placeholder="Tìm theo giảng viên, phòng, lớp..." type="text"/>
+                    @if (!string.IsNullOrEmpty(search))
                     {
-                        <tr>
-                            <td colspan="8" class="py-12 text-center text-outline">
-                                <span class="material-symbols-outlined text-4xl block mb-2 text-outline/50">event_busy</span>
-                                Chưa có buổi học nào phù hợp với bộ lọc hiện tại.
-                            </td>
-                        </tr>
+                        <a href="/BuoiHoc/Index" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+                            <span class="material-symbols-outlined text-[16px]">cancel</span>
+                        </a>
                     }
-                    else
-                    {
-                        @foreach (var item in Model)
+                </div>
+
+                <!-- Filter Dropdown: Lớp học -->
+                <div class="relative">
+                    <select name="maLop" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <option value="">Tất cả Lớp học</option>
+                        @foreach (var lop in lopHocs)
                         {
-                            bool isConflict = conflictIds.Contains(item.MaBuoiHoc);
-                            <tr class="hover:bg-surface-container-low/50 transition-colors group @(isConflict ? "bg-red-50/50" : "")" 
-                                data-id="@item.MaBuoiHoc"
-                                data-malop="@item.MaLop"
-                                data-tenlop="@(item.LopHoc?.TenLop ?? "")"
-                                data-phong="@item.PhongHoc"
-                                data-gv="@item.GiangVien"
-                                data-batdau="@item.ThoiGianBatDau.ToString("yyyy-MM-ddTHH:mm")"
-                                data-ketthuc="@item.ThoiGianKetThuc.ToString("yyyy-MM-ddTHH:mm")"
-                                data-noidung="@item.NoiDung"
-                                data-ghichu="@item.GhiChu"
-                                data-trangthai="@item.TrangThai">
-                                <td class="p-4 pl-6 text-center">
-                                    <input class="rounded border-border-standard text-primary focus:ring-primary h-4 w-4 row-checkbox cursor-pointer" type="checkbox"/>
-                                </td>
-                                <td class="py-4 px-4 font-mono font-semibold text-primary">
-                                    #BH@item.MaBuoiHoc.ToString("D3")
-                                </td>
-                                <td class="py-4 px-4">
-                                    <div class="font-label-md text-label-md text-brand-deep font-semibold">
-                                        @(item.LopHoc?.TenLop ?? $"Lớp #{item.MaLop}")
-                                    </div>
-                                    <div class="text-outline text-[12px] truncate max-w-xs">
-                                        @(item.NoiDung ?? "Nội dung chuẩn theo đề cương")
-                                    </div>
-                                </td>
-                                <td class="py-4 px-4 text-on-surface">
-                                    <div class="font-semibold text-brand-deep">
-                                        @item.ThoiGianBatDau.ToString("dd/MM/yyyy")
-                                    </div>
-                                    <div class="text-[12px] text-outline font-mono">
-                                        @item.ThoiGianBatDau.ToString("HH:mm") - @item.ThoiGianKetThuc.ToString("HH:mm")
-                                    </div>
-                                </td>
-                                <td class="py-4 px-3 text-center">
-                                    <span class="inline-block bg-primary/10 text-primary font-bold font-mono px-2.5 py-1 rounded-lg text-xs">
-                                        @item.PhongHoc
-                                    </span>
-                                </td>
-                                <td class="py-4 px-4 text-on-surface">
-                                    <div class="flex items-center gap-1.5 font-medium">
-                                        <span class="material-symbols-outlined text-[16px] text-outline">person</span>
-                                        <span>@item.GiangVien</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-4">
-                                    @if (isConflict)
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-danger-crimson bg-red-100 px-2.5 py-1 rounded-full animate-pulse">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-danger-crimson"></span>
-                                            Trùng ca học
-                                        </span>
-                                    }
-                                    else if (item.TrangThai == "Đã hoàn thành")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-success-emerald bg-[#10B981]/10 px-2.5 py-1 rounded-full">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span>
-                                            Hoàn thành
-                                        </span>
-                                    }
-                                    else if (item.TrangThai == "Đã hủy")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-outline bg-surface-container px-2.5 py-1 rounded-full">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
-                                            Đã hủy
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                                            Đã lên lịch
-                                        </span>
-                                    }
-                                </td>
-                                <td class="py-4 px-6 text-right">
-                                    <div class="inline-flex items-center gap-1">
-                                        <button onclick="viewSessionDetails(@item.MaBuoiHoc)" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer" title="Xem chi tiết">
-                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
-                                        </button>
-                                        <button onclick="openEditDrawerFromRow(this)" class="p-1.5 rounded-lg text-outline hover:text-secondary-container hover:bg-surface-container-low transition-colors cursor-pointer" title="Chỉnh sửa">
-                                            <span class="material-symbols-outlined text-[18px]">edit</span>
-                                        </button>
-                                        <button onclick="confirmDelete(@item.MaBuoiHoc, '#BH@item.MaBuoiHoc.ToString("D3") - @(item.LopHoc?.TenLop ?? "") (@item.PhongHoc)')" class="p-1.5 rounded-lg text-outline hover:text-danger-crimson hover:bg-red-50 transition-colors cursor-pointer" title="Xóa buổi học">
-                                            <span class="material-symbols-outlined text-[18px]">delete</span>
-                                        </button>
-                                    </div>
+                            <!option value="@lop.MaLop" @(selectedMaLop == lop.MaLop ? "selected" : "")>@lop.TenLop</!option>
+                        }
+                    </select>
+                    <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+                </div>
+
+                <!-- Filter Dropdown: Phòng học -->
+                <div class="relative">
+                    <select name="phong" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <option value="">Tất cả Phòng học</option>
+                        @foreach (var p in danhSachPhong)
+                        {
+                            <!option value="@p" @(selectedPhong == p ? "selected" : "")>@p</!option>
+                        }
+                    </select>
+                    <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+                </div>
+
+                <!-- Filter Dropdown: Trạng thái -->
+                <div class="relative">
+                    <select name="trangThai" onchange="document.getElementById('filter-form').submit()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                        <option value="">Trạng thái: Tất cả</option>
+                        <!option value="Đã lên lịch" @(selectedTrangThai == "Đã lên lịch" ? "selected" : "")>● Đã lên lịch</!option>
+                        <!option value="Đã hoàn thành" @(selectedTrangThai == "Đã hoàn thành" ? "selected" : "")>● Đã hoàn thành</!option>
+                        <!option value="Đã hủy" @(selectedTrangThai == "Đã hủy" ? "selected" : "")>○ Đã hủy</!option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+                </div>
+            </form>
+
+            <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
+                <a href="/BuoiHoc/Index" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors" title="Làm mới bảng">
+                    <span class="material-symbols-outlined text-[20px] block">refresh</span>
+                </a>
+                <button onclick="openDrawer('create')" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    <span>Tạo buổi mới</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Table Container -->
+        <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_1px_3px_rgba(0,22,86,0.04),0_8px_24px_-4px_rgba(0,22,86,0.06)] overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="crud-table">
+                    <thead>
+                        <tr class="bg-surface-container-low/70 border-b border-border-subtle font-label-sm text-label-sm text-outline tracking-wider uppercase">
+                            <th class="p-4 pl-6 w-12 text-center">
+                                <input class="rounded border-border-standard text-primary focus:ring-primary h-4 w-4 cursor-pointer" type="checkbox" id="select-all"/>
+                            </th>
+                            <th class="py-4 px-4">Mã ca</th>
+                            <th class="py-4 px-4 min-w-[200px]">Lớp học</th>
+                            <th class="py-4 px-4">Thời gian học</th>
+                            <th class="py-4 px-3 text-center">Phòng</th>
+                            <th class="py-4 px-4">Giảng viên</th>
+                            <th class="py-4 px-4">Trạng thái</th>
+                            <th class="py-4 px-6 text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border-subtle font-body-sm text-body-sm">
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="py-12 text-center text-outline">
+                                    <span class="material-symbols-outlined text-4xl block mb-2 text-outline/50">event_busy</span>
+                                    Chưa có buổi học nào phù hợp với bộ lọc hiện tại.
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination Toolbar -->
-        <div class="p-4 px-6 border-t border-border-subtle bg-surface-white flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="font-body-sm text-body-sm text-outline">
-                Hiển thị <span class="font-semibold text-brand-deep tabular-nums">@startRecord-@endRecord</span> trên <span class="font-semibold text-brand-deep tabular-nums">@totalRecords</span> buổi học
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                bool isConflict = conflictIds.Contains(item.MaBuoiHoc);
+                                <tr class="hover:bg-surface-container-low/50 transition-colors group @(isConflict ? "bg-red-50/50" : "")" 
+                                    data-id="@item.MaBuoiHoc"
+                                    data-malop="@item.MaLop"
+                                    data-tenlop="@(item.LopHoc?.TenLop ?? "")"
+                                    data-phong="@item.PhongHoc"
+                                    data-gv="@item.GiangVien"
+                                    data-batdau="@item.ThoiGianBatDau.ToString("yyyy-MM-ddTHH:mm")"
+                                    data-ketthuc="@item.ThoiGianKetThuc.ToString("yyyy-MM-ddTHH:mm")"
+                                    data-noidung="@item.NoiDung"
+                                    data-ghichu="@item.GhiChu"
+                                    data-trangthai="@item.TrangThai">
+                                    <td class="p-4 pl-6 text-center">
+                                        <input class="rounded border-border-standard text-primary focus:ring-primary h-4 w-4 row-checkbox cursor-pointer" type="checkbox"/>
+                                    </td>
+                                    <td class="py-4 px-4 font-mono font-semibold text-primary">
+                                        #BH@item.MaBuoiHoc.ToString("D3")
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="font-label-md text-label-md text-brand-deep font-semibold">
+                                            @(item.LopHoc?.TenLop ?? $"Lớp #{item.MaLop}")
+                                        </div>
+                                        <div class="text-outline text-[12px] truncate max-w-xs">
+                                            @(item.NoiDung ?? "Nội dung chuẩn theo đề cương")
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-on-surface">
+                                        <div class="font-semibold text-brand-deep">
+                                            @item.ThoiGianBatDau.ToString("dd/MM/yyyy")
+                                        </div>
+                                        <div class="text-[12px] text-outline font-mono">
+                                            @item.ThoiGianBatDau.ToString("HH:mm") - @item.ThoiGianKetThuc.ToString("HH:mm")
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-3 text-center">
+                                        <span class="inline-block bg-primary/10 text-primary font-bold font-mono px-2.5 py-1 rounded-lg text-xs">
+                                            @item.PhongHoc
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 text-on-surface">
+                                        <div class="flex items-center gap-1.5 font-medium">
+                                            <span class="material-symbols-outlined text-[16px] text-outline">person</span>
+                                            <span>@item.GiangVien</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        @if (isConflict)
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-danger-crimson bg-red-100 px-2.5 py-1 rounded-full animate-pulse">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-danger-crimson"></span>
+                                                Trùng ca học
+                                            </span>
+                                        }
+                                        else if (item.TrangThai == "Đã hoàn thành")
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-success-emerald bg-[#10B981]/10 px-2.5 py-1 rounded-full">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span>
+                                                Hoàn thành
+                                            </span>
+                                        }
+                                        else if (item.TrangThai == "Đã hủy")
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-outline bg-surface-container px-2.5 py-1 rounded-full">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                                                Đã hủy
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                                Đã lên lịch
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-4 px-6 text-right">
+                                        <div class="inline-flex items-center gap-1">
+                                            <button onclick="openEditDrawerFromRow(this)" class="p-1.5 rounded-lg text-outline hover:text-secondary-container hover:bg-surface-container-low transition-colors cursor-pointer" title="Chỉnh sửa">
+                                                <span class="material-symbols-outlined text-[18px]">edit</span>
+                                            </button>
+                                            <button onclick="confirmDelete(@item.MaBuoiHoc, '#BH@item.MaBuoiHoc.ToString("D3") - @(item.LopHoc?.TenLop ?? "") (@item.PhongHoc)')" class="p-1.5 rounded-lg text-outline hover:text-danger-crimson hover:bg-red-50 transition-colors cursor-pointer" title="Xóa buổi học">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
-            <div class="flex items-center gap-1.5">
-                <a href="/BuoiHoc/Index?page=@(currentPage - 1)&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
-                   class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage <= 1 ? "opacity-40 pointer-events-none" : "")">
-                    <span class="material-symbols-outlined text-[18px]">chevron_left</span>
-                </a>
-                @for (int p = 1; p <= totalPages; p++)
-                {
-                    if (p == currentPage)
+
+            <!-- Pagination Toolbar -->
+            <div class="p-4 px-6 border-t border-border-subtle bg-surface-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="font-body-sm text-body-sm text-outline">
+                    Hiển thị <span class="font-semibold text-brand-deep tabular-nums">@startRecord-@endRecord</span> trên <span class="font-semibold text-brand-deep tabular-nums">@totalRecords</span> buổi học
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <a href="/BuoiHoc/Index?page=@(currentPage - 1)&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
+                       class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage <= 1 ? "opacity-40 pointer-events-none" : "")">
+                        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                    </a>
+                    @for (int p = 1; p <= totalPages; p++)
                     {
-                        <span class="w-8 h-8 rounded-lg bg-primary text-surface-white font-label-md text-label-md font-bold flex items-center justify-center">@p</span>
+                        if (p == currentPage)
+                        {
+                            <span class="w-8 h-8 rounded-lg bg-primary text-surface-white font-label-md text-label-md font-bold flex items-center justify-center">@p</span>
+                        }
+                        else if (p <= 3 || p == totalPages || Math.Abs(p - currentPage) <= 1)
+                        {
+                            <a href="/BuoiHoc/Index?page=@p&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
+                               class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-surface-container-low font-label-md text-label-md flex items-center justify-center">@p</a>
+                        }
+                        else if (p == 4 && totalPages > 5)
+                        {
+                            <span class="px-1 text-outline font-body-sm">...</span>
+                        }
                     }
-                    else if (p <= 3 || p == totalPages || Math.Abs(p - currentPage) <= 1)
-                    {
-                        <a href="/BuoiHoc/Index?page=@p&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
-                           class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-surface-container-low font-label-md text-label-md flex items-center justify-center">@p</a>
-                    }
-                    else if (p == 4 && totalPages > 5)
-                    {
-                        <span class="px-1 text-outline font-body-sm">...</span>
-                    }
-                }
-                <a href="/BuoiHoc/Index?page=@(currentPage + 1)&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
-                   class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage >= totalPages ? "opacity-40 pointer-events-none" : "")">
-                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-                </a>
+                    <a href="/BuoiHoc/Index?page=@(currentPage + 1)&maLop=@selectedMaLop&phong=@selectedPhong&trangThai=@selectedTrangThai&search=@search" 
+                       class="p-1.5 rounded-lg border border-border-standard text-outline hover:bg-surface-container-low @(currentPage >= totalPages ? "opacity-40 pointer-events-none" : "")">
+                        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -522,6 +732,26 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
 </div>
 
 <script>
+    // Tab View Switcher (Timetable vs Table)
+    function switchView(mode) {
+        const viewTimetable = document.getElementById('view-timetable');
+        const viewTable = document.getElementById('view-table');
+        const btnTimetable = document.getElementById('tab-btn-timetable');
+        const btnTable = document.getElementById('tab-btn-table');
+
+        if (mode === 'timetable') {
+            viewTimetable.classList.remove('hidden');
+            viewTable.classList.add('hidden');
+            btnTimetable.className = 'px-3.5 py-1.5 rounded-lg bg-surface-white text-primary-container font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer';
+            btnTable.className = 'px-3.5 py-1.5 rounded-lg text-outline hover:text-brand-deep transition-all flex items-center gap-1.5 cursor-pointer';
+        } else {
+            viewTimetable.classList.add('hidden');
+            viewTable.classList.remove('hidden');
+            btnTable.className = 'px-3.5 py-1.5 rounded-lg bg-surface-white text-primary-container font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer';
+            btnTimetable.className = 'px-3.5 py-1.5 rounded-lg text-outline hover:text-brand-deep transition-all flex items-center gap-1.5 cursor-pointer';
+        }
+    }
+
     // Micro-interactions for Drawer and Global Modal
     const drawer = document.getElementById('drawer-container');
     const drawerForm = document.getElementById('drawer-form');
@@ -548,6 +778,32 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
 
     function closeDrawer() {
         drawer.classList.add('hidden');
+    }
+
+    // Quick Add Schedule into a specific Day and Shift from Timetable Grid
+    function quickAddScheduleSlot(dayName, caNumber) {
+        openDrawer('create');
+        
+        // Calculate date for next dayName
+        const dayMap = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+        const targetDay = dayMap[dayName] || 1;
+        const now = new Date();
+        const currentDay = now.getDay() || 7;
+        let diff = targetDay - currentDay;
+        if (diff <= 0) diff += 7;
+        const targetDate = new Date(now.setDate(now.getDate() + diff));
+
+        const yyyy = targetDate.getFullYear();
+        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(targetDate.getDate()).padStart(2, '0');
+
+        let startH = "07:00", endH = "09:15";
+        if (caNumber === 2) { startH = "09:30"; endH = "11:45"; }
+        else if (caNumber === 3) { startH = "13:30"; endH = "15:45"; }
+        else if (caNumber === 4) { startH = "16:00"; endH = "18:15"; }
+
+        document.getElementById('drawer-batdau').value = `${yyyy}-${mm}-${dd}T${startH}`;
+        document.getElementById('drawer-ketthuc').value = `${yyyy}-${mm}-${dd}T${endH}`;
     }
 
     function openEditDrawerFromRow(btn) {
@@ -578,9 +834,13 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học CRUD chuẩn phong 
         drawer.classList.remove('hidden');
     }
 
-    function viewSessionDetails(id) {
+    function openEditDrawerById(id) {
         const row = document.querySelector(`tr[data-id="${id}"]`);
-        if (row) openEditDrawerFromRow(row.querySelector('button[title="Chỉnh sửa"]'));
+        if (row) {
+            openEditDrawerFromRow(row.querySelector('button[title="Chỉnh sửa"]'));
+        } else {
+            openDrawer('create');
+        }
     }
 
     function confirmDelete(id, sessionName) {

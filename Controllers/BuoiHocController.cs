@@ -101,9 +101,12 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             ViewBag.SelectedTrangThai = trangThai;
             ViewBag.Search = search;
 
-            // 5. Dữ liệu nạp Dropdowns
+            // 5. Dữ liệu nạp Dropdowns & Thời khóa biểu tuần
             ViewBag.LopHocList = await _context.LopHocs.ToListAsync();
-            var allSessions = await _context.BuoiHocs.ToListAsync();
+            var allSessions = await _context.BuoiHocs.Include(b => b.LopHoc).ToListAsync();
+            ViewBag.AllBuoiHocs = allSessions;
+            ViewBag.SoThi = allSessions.Count(b => b.NoiDung != null && (b.NoiDung.ToLower().Contains("thi") || b.NoiDung.ToLower().Contains("kiểm tra")));
+            ViewBag.SoChinhKhoa = allSessions.Count(b => b.TrangThai != "Đã hủy");
             ViewBag.DanhSachPhong = allSessions.Select(b => b.PhongHoc).Where(p => !string.IsNullOrEmpty(p)).Distinct().ToList();
             ViewBag.DanhSachGiangVien = allSessions.Select(b => b.GiangVien).Where(g => !string.IsNullOrEmpty(g)).Distinct().ToList();
 
