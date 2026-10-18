@@ -8,7 +8,10 @@ builder.Services.AddControllersWithViews();
 
 // Cấu hình DbContext với SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 
 // Cấu hình Session (Module 1)
 builder.Services.AddDistributedMemoryCache();
@@ -24,8 +27,16 @@ var app = builder.Build();
 // Tự động kiểm tra và tạo CSDL (Auto-Migrate) nếu chưa có
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(ex, "Lưu ý khi tự động Migrate CSDL: {Message}", ex.Message);
+    }
 }
 
 // Configure the HTTP request pipeline.

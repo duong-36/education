@@ -66,368 +66,260 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
 
                     b.HasIndex("MaLop");
 
-                    b.ToTable("BuoiHocs", (string)null);
+                    b.ToTable("BuoiHocs");
 
                     b.HasData(
                         new
                         {
                             MaBuoiHoc = 1,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
+                            GhiChu = "Phòng máy A1",
+                            GiangVien = "ThS. Nguyễn Văn A",
                             MaLop = 1,
-                            NoiDung = "Buổi học 1",
-                            PhongHoc = "Phòng 101",
-                            ThoiGianBatDau = new DateTime(2023, 2, 2, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 2, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
+                            NoiDung = "Bài 03: Kiến trúc ASP.NET Core MVC & Dependency Injection",
+                            PhongHoc = "P.301-A1",
+                            ThoiGianBatDau = new DateTime(2026, 10, 12, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 12, 9, 15, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 2,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
+                            GhiChu = "Thực hành phòng Lab",
+                            GiangVien = "TS. Trần Thị B",
                             MaLop = 2,
-                            NoiDung = "Buổi học 2",
-                            PhongHoc = "Phòng 102",
-                            ThoiGianBatDau = new DateTime(2023, 2, 3, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 3, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            NoiDung = "Bài 04: React Hooks & Quản lý State với Context API",
+                            PhongHoc = "Lab Web-01",
+                            ThoiGianBatDau = new DateTime(2026, 10, 12, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 12, 11, 45, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 3,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
+                            GhiChu = "Môi trường Jupyter Lab",
+                            GiangVien = "ThS. Lê Hoàng C",
                             MaLop = 3,
-                            NoiDung = "Buổi học 3",
-                            PhongHoc = "Phòng 103",
-                            ThoiGianBatDau = new DateTime(2023, 2, 4, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 4, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
+                            NoiDung = "Bài 05: Phân tích và xử lý dữ liệu với thư viện Pandas",
+                            PhongHoc = "Lab AI-02",
+                            ThoiGianBatDau = new DateTime(2026, 10, 12, 13, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 12, 15, 45, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 4,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
+                            GhiChu = "Phòng đa phương tiện",
+                            GiangVien = "Ms. Sarah Jenkins",
                             MaLop = 4,
-                            NoiDung = "Buổi học 4",
-                            PhongHoc = "Phòng 104",
-                            ThoiGianBatDau = new DateTime(2023, 2, 5, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 5, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            NoiDung = "Unit 04: Business Presentation & Workplace Communication",
+                            PhongHoc = "P.402-HA8",
+                            ThoiGianBatDau = new DateTime(2026, 10, 13, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 13, 9, 15, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 5,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
+                            GhiChu = "Máy Mac + Emulator",
+                            GiangVien = "ThS. Phạm Minh D",
                             MaLop = 5,
-                            NoiDung = "Buổi học 5",
-                            PhongHoc = "Phòng 100",
-                            ThoiGianBatDau = new DateTime(2023, 2, 6, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 6, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
+                            NoiDung = "Bài 03: Thiết kế UI Widgets & Navigation trong Flutter",
+                            PhongHoc = "Lab Mobile-03",
+                            ThoiGianBatDau = new DateTime(2026, 10, 13, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 13, 11, 45, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 6,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
+                            GhiChu = "Thực hành SQL Server",
+                            GiangVien = "ThS. Nguyễn Văn A",
                             MaLop = 6,
-                            NoiDung = "Buổi học 6",
-                            PhongHoc = "Phòng 101",
-                            ThoiGianBatDau = new DateTime(2023, 2, 7, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 7, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            NoiDung = "Bài 06: Entity Framework Core Code-First & LINQ Queries",
+                            PhongHoc = "P.301-A1",
+                            ThoiGianBatDau = new DateTime(2026, 10, 13, 13, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 13, 15, 45, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 7,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
+                            GhiChu = "Thực hành API",
+                            GiangVien = "TS. Trần Thị B",
                             MaLop = 7,
-                            NoiDung = "Buổi học 7",
-                            PhongHoc = "Phòng 102",
-                            ThoiGianBatDau = new DateTime(2023, 2, 8, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 8, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
+                            NoiDung = "Bài 07: Tích hợp RESTful API với Axios & Async Thunk",
+                            PhongHoc = "Lab Web-01",
+                            ThoiGianBatDau = new DateTime(2026, 10, 13, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 13, 18, 15, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 8,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
+                            GhiChu = "Thực hành đồ thị",
+                            GiangVien = "ThS. Lê Hoàng C",
                             MaLop = 8,
-                            NoiDung = "Buổi học 8",
-                            PhongHoc = "Phòng 103",
-                            ThoiGianBatDau = new DateTime(2023, 2, 9, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 9, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            NoiDung = "Bài 08: Trực quan hóa dữ liệu trực quan với Matplotlib & Seaborn",
+                            PhongHoc = "Lab AI-02",
+                            ThoiGianBatDau = new DateTime(2026, 10, 14, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 14, 9, 15, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
                             MaBuoiHoc = 9,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 9,
-                            NoiDung = "Buổi học 9",
-                            PhongHoc = "Phòng 104",
-                            ThoiGianBatDau = new DateTime(2023, 2, 10, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 10, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 10,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 10,
-                            NoiDung = "Buổi học 10",
-                            PhongHoc = "Phòng 100",
-                            ThoiGianBatDau = new DateTime(2023, 2, 11, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 11, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            GhiChu = "Thi trắc nghiệm + Code trực tiếp",
+                            GiangVien = "ThS. Nguyễn Văn A",
+                            MaLop = 1,
+                            NoiDung = "Kiểm tra giữa kỳ: LINQ Queries & Entity Framework Core",
+                            PhongHoc = "P.301-A1",
+                            ThoiGianBatDau = new DateTime(2026, 10, 14, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 14, 11, 45, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã hoàn thành"
                         },
                         new
                         {
+                            MaBuoiHoc = 10,
+                            GhiChu = "Văn bản thương mại",
+                            GiangVien = "Ms. Sarah Jenkins",
+                            MaLop = 9,
+                            NoiDung = "Unit 06: Email Writing & Business Negotiation Skills",
+                            PhongHoc = "P.402-HA8",
+                            ThoiGianBatDau = new DateTime(2026, 10, 14, 13, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 14, 15, 45, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã lên lịch"
+                        },
+                        new
+                        {
                             MaBuoiHoc = 11,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 11,
-                            NoiDung = "Buổi học 11",
-                            PhongHoc = "Phòng 101",
-                            ThoiGianBatDau = new DateTime(2023, 2, 12, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 12, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            GhiChu = "Kiến trúc Bloc",
+                            GiangVien = "ThS. Phạm Minh D",
+                            MaLop = 10,
+                            NoiDung = "Bài 07: Quản lý State nâng cao với Bloc / Cubit",
+                            PhongHoc = "Lab Mobile-03",
+                            ThoiGianBatDau = new DateTime(2026, 10, 15, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 15, 11, 45, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 12,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 12,
-                            NoiDung = "Buổi học 12",
-                            PhongHoc = "Phòng 102",
-                            ThoiGianBatDau = new DateTime(2023, 2, 13, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 13, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
+                            GhiChu = "Thi thực hành 90 phút",
+                            GiangVien = "TS. Trần Thị B",
+                            MaLop = 2,
+                            NoiDung = "Kiểm tra thực hành: Xây dựng SPA React Component & Hooks",
+                            PhongHoc = "Lab Web-01",
+                            ThoiGianBatDau = new DateTime(2026, 10, 15, 13, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 15, 15, 45, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 13,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 13,
-                            NoiDung = "Buổi học 13",
-                            PhongHoc = "Phòng 103",
-                            ThoiGianBatDau = new DateTime(2023, 2, 14, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 14, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            GhiChu = "Bảo mật ứng dụng",
+                            GiangVien = "TS. Vũ Đình E",
+                            MaLop = 11,
+                            NoiDung = "Bài 05: Xác thực và phân quyền với ASP.NET Core Identity",
+                            PhongHoc = "P.301-A1",
+                            ThoiGianBatDau = new DateTime(2026, 10, 15, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 15, 18, 15, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 14,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 14,
-                            NoiDung = "Buổi học 14",
-                            PhongHoc = "Phòng 104",
-                            ThoiGianBatDau = new DateTime(2023, 2, 15, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 15, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
+                            GhiChu = "Vấn đáp 1-1",
+                            GiangVien = "Ms. Sarah Jenkins",
+                            MaLop = 4,
+                            NoiDung = "Thi đánh giá năng lực: Tiếng Anh Giao tiếp B1 (Vấn đáp)",
+                            PhongHoc = "P.402-HA8",
+                            ThoiGianBatDau = new DateTime(2026, 10, 16, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 16, 9, 15, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 15,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 15,
-                            NoiDung = "Buổi học 15",
-                            PhongHoc = "Phòng 100",
-                            ThoiGianBatDau = new DateTime(2023, 2, 16, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 16, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            GhiChu = "Tối ưu render",
+                            GiangVien = "TS. Trần Thị B",
+                            MaLop = 12,
+                            NoiDung = "Bài 08: Tối ưu hiệu năng React với useMemo, useCallback & Lazy",
+                            PhongHoc = "Lab Web-01",
+                            ThoiGianBatDau = new DateTime(2026, 10, 16, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 16, 11, 45, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 16,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 1,
-                            NoiDung = "Buổi học 16",
-                            PhongHoc = "Phòng 101",
-                            ThoiGianBatDau = new DateTime(2023, 2, 17, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 17, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
+                            GhiChu = "Báo cáo tiến độ",
+                            GiangVien = "ThS. Lê Hoàng C",
+                            MaLop = 3,
+                            NoiDung = "Kiểm tra tiến độ đồ án: Huấn luyện mô hình Machine Learning",
+                            PhongHoc = "Lab AI-02",
+                            ThoiGianBatDau = new DateTime(2026, 10, 16, 13, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 16, 15, 45, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 17,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 2,
-                            NoiDung = "Buổi học 17",
-                            PhongHoc = "Phòng 102",
-                            ThoiGianBatDau = new DateTime(2023, 2, 18, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 18, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            GhiChu = "Tokenization & TF-IDF",
+                            GiangVien = "ThS. Lê Hoàng C",
+                            MaLop = 13,
+                            NoiDung = "Bài 09: Xử lý ngôn ngữ tự nhiên cơ bản với thư viện NLTK",
+                            PhongHoc = "Lab AI-02",
+                            ThoiGianBatDau = new DateTime(2026, 10, 16, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 16, 18, 15, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 18,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 3,
-                            NoiDung = "Buổi học 18",
-                            PhongHoc = "Phòng 103",
-                            ThoiGianBatDau = new DateTime(2023, 2, 19, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 19, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
+                            GhiChu = "Demo ứng dụng mobile",
+                            GiangVien = "ThS. Phạm Minh D",
+                            MaLop = 5,
+                            NoiDung = "Thi thực hành cuối kỳ: Xây dựng App Flutter hoàn chỉnh",
+                            PhongHoc = "Lab Mobile-03",
+                            ThoiGianBatDau = new DateTime(2026, 10, 17, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 17, 9, 15, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 19,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 4,
-                            NoiDung = "Buổi học 19",
-                            PhongHoc = "Phòng 104",
-                            ThoiGianBatDau = new DateTime(2023, 2, 20, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 20, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            GhiChu = "Phỏng vấn thử",
+                            GiangVien = "Ms. Sarah Jenkins",
+                            MaLop = 14,
+                            NoiDung = "Unit 08: Professional Interview & CV Preparation",
+                            PhongHoc = "P.402-HA8",
+                            ThoiGianBatDau = new DateTime(2026, 10, 17, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 17, 11, 45, 0, 0, DateTimeKind.Unspecified),
                             TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 20,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 5,
-                            NoiDung = "Buổi học 20",
-                            PhongHoc = "Phòng 100",
-                            ThoiGianBatDau = new DateTime(2023, 2, 21, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 21, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
+                            GhiChu = "Build APK & IPA",
+                            GiangVien = "ThS. Phạm Minh D",
+                            MaLop = 15,
+                            NoiDung = "Bài 10: Đóng gói và phát hành ứng dụng lên Stores",
+                            PhongHoc = "Lab Mobile-03",
+                            ThoiGianBatDau = new DateTime(2026, 10, 17, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 17, 18, 15, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã lên lịch"
                         },
                         new
                         {
                             MaBuoiHoc = 21,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 6,
-                            NoiDung = "Buổi học 21",
-                            PhongHoc = "Phòng 101",
-                            ThoiGianBatDau = new DateTime(2023, 2, 22, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 22, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 22,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 7,
-                            NoiDung = "Buổi học 22",
-                            PhongHoc = "Phòng 102",
-                            ThoiGianBatDau = new DateTime(2023, 2, 23, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 23, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 23,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 8,
-                            NoiDung = "Buổi học 23",
-                            PhongHoc = "Phòng 103",
-                            ThoiGianBatDau = new DateTime(2023, 2, 24, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 24, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 24,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 9,
-                            NoiDung = "Buổi học 24",
-                            PhongHoc = "Phòng 104",
-                            ThoiGianBatDau = new DateTime(2023, 2, 25, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 25, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 25,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 10,
-                            NoiDung = "Buổi học 25",
-                            PhongHoc = "Phòng 100",
-                            ThoiGianBatDau = new DateTime(2023, 2, 26, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 26, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 26,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 11,
-                            NoiDung = "Buổi học 26",
-                            PhongHoc = "Phòng 101",
-                            ThoiGianBatDau = new DateTime(2023, 2, 27, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 27, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 27,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 12,
-                            NoiDung = "Buổi học 27",
-                            PhongHoc = "Phòng 102",
-                            ThoiGianBatDau = new DateTime(2023, 2, 28, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 2, 28, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 28,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 2",
-                            MaLop = 13,
-                            NoiDung = "Buổi học 28",
-                            PhongHoc = "Phòng 103",
-                            ThoiGianBatDau = new DateTime(2023, 3, 1, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 3, 1, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 29,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 3",
-                            MaLop = 14,
-                            NoiDung = "Buổi học 29",
-                            PhongHoc = "Phòng 104",
-                            ThoiGianBatDau = new DateTime(2023, 3, 2, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 3, 2, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã lên lịch"
-                        },
-                        new
-                        {
-                            MaBuoiHoc = 30,
-                            GhiChu = "",
-                            GiangVien = "Giảng viên 1",
-                            MaLop = 15,
-                            NoiDung = "Buổi học 30",
-                            PhongHoc = "Phòng 100",
-                            ThoiGianBatDau = new DateTime(2023, 3, 3, 18, 0, 0, 0, DateTimeKind.Unspecified),
-                            ThoiGianKetThuc = new DateTime(2023, 3, 3, 21, 0, 0, 0, DateTimeKind.Unspecified),
-                            TrangThai = "Đã hoàn thành"
+                            GhiChu = "Sẽ xếp lịch bù sau",
+                            GiangVien = "ThS. Nguyễn Văn A",
+                            MaLop = 1,
+                            NoiDung = "Lớp phụ đạo LINQ chuyên sâu (Tạm hoãn do giảng viên đi công tác)",
+                            PhongHoc = "P.301-A1",
+                            ThoiGianBatDau = new DateTime(2026, 10, 18, 9, 30, 0, 0, DateTimeKind.Unspecified),
+                            ThoiGianKetThuc = new DateTime(2026, 10, 18, 11, 45, 0, 0, DateTimeKind.Unspecified),
+                            TrangThai = "Đã hủy"
                         });
                 });
 
@@ -460,7 +352,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
 
                     b.HasKey("MaChuongTrinh");
 
-                    b.ToTable("ChuongTrinhDaoTaos", (string)null);
+                    b.ToTable("ChuongTrinhDaoTaos");
 
                     b.HasData(
                         new
@@ -550,7 +442,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
 
                     b.HasIndex("MaLop");
 
-                    b.ToTable("DangKyHocs", (string)null);
+                    b.ToTable("DangKyHocs");
 
                     b.HasData(
                         new
@@ -560,10 +452,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 1,
                             MaLop = 1,
                             NgayDangKy = new DateTime(2023, 1, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Chờ duyệt"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -572,10 +465,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 2,
                             MaLop = 2,
                             NgayDangKy = new DateTime(2023, 1, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Đã duyệt"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -601,7 +495,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             NgayXuLy = new DateTime(2023, 1, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
                             SoTienDaDong = 5000000.0,
-                            TrangThai = "Đang học"
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -610,10 +504,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 5,
                             MaLop = 5,
                             NgayDangKy = new DateTime(2023, 1, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Đã hủy"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -622,10 +517,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 6,
                             MaLop = 6,
                             NgayDangKy = new DateTime(2023, 1, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Chờ duyệt"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -634,10 +530,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 7,
                             MaLop = 7,
                             NgayDangKy = new DateTime(2023, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Đã duyệt"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -663,7 +560,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             NgayXuLy = new DateTime(2023, 1, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
                             SoTienDaDong = 5000000.0,
-                            TrangThai = "Đang học"
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -672,10 +569,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 10,
                             MaLop = 10,
                             NgayDangKy = new DateTime(2023, 1, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Đã hủy"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -684,10 +582,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 11,
                             MaLop = 11,
                             NgayDangKy = new DateTime(2023, 1, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Chờ duyệt"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -696,10 +595,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 12,
                             MaLop = 12,
                             NgayDangKy = new DateTime(2023, 1, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 1, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Đã duyệt"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -725,7 +625,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             NgayXuLy = new DateTime(2023, 1, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
                             SoTienDaDong = 5000000.0,
-                            TrangThai = "Đang học"
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -734,10 +634,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                             MaHocVien = 15,
                             MaLop = 15,
                             NgayDangKy = new DateTime(2023, 1, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NgayDongHocPhi = new DateTime(2023, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NgayXuLy = new DateTime(2023, 1, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             NhanXetGiaoVu = "Đã kiểm tra",
-                            SoTienDaDong = 0.0,
-                            TrangThai = "Đã hủy"
+                            SoTienDaDong = 5000000.0,
+                            TrangThai = "Đã đóng học phí"
                         },
                         new
                         {
@@ -1170,7 +1071,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
 
                     b.HasIndex("MaTaiKhoan");
 
-                    b.ToTable("HocViens", (string)null);
+                    b.ToTable("HocViens");
 
                     b.HasData(
                         new
@@ -1631,7 +1532,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
 
                     b.HasIndex("MaDangKy");
 
-                    b.ToTable("KetQuaHocTaps", (string)null);
+                    b.ToTable("KetQuaHocTaps");
 
                     b.HasData(
                         new
@@ -1895,7 +1796,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
 
                     b.HasIndex("MaChuongTrinh");
 
-                    b.ToTable("LopHocs", (string)null);
+                    b.ToTable("LopHocs");
 
                     b.HasData(
                         new
@@ -2197,7 +2098,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Migrations
                     b.HasIndex("TenDangNhap")
                         .IsUnique();
 
-                    b.ToTable("TaiKhoans", (string)null);
+                    b.ToTable("TaiKhoans");
 
                     b.HasData(
                         new
