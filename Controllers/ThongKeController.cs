@@ -21,17 +21,40 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Dashboard(int page = 1)
+        public async Task<IActionResult> Dashboard(int page = 1, string? status = "all", string? search = "")
         {
             int pageSize = 5;
-            int totalActivities = await _context.DangKyHocs.CountAsync();
-            int totalPages = (int)Math.Ceiling(totalActivities / (double)pageSize);
-            if (page < 1) page = 1;
-            if (page > totalPages && totalPages > 0) page = totalPages;
+            status = string.IsNullOrWhiteSpace(status) ? "all" : status.Trim();
+            search = string.IsNullOrWhiteSpace(search) ? "" : search.Trim();
 
-            var recentActivities = await _context.DangKyHocs
+            var query = _context.DangKyHocs
                 .Include(d => d.HocVien)
                 .Include(d => d.LopHoc)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                string s = search.ToLower();
+                query = query.Where(d => (d.HocVien != null && (d.HocVien.HoTen.ToLower().Contains(s) || d.HocVien.MaHocVien.ToString().Contains(s)))
+                                      || (d.LopHoc != null && d.LopHoc.TenLop.ToLower().Contains(s)));
+            }
+
+            if (status == "Chờ duyệt")
+            {
+                query = query.Where(d => d.TrangThai == "Chờ duyệt");
+            }
+            else if (status == "Đã duyệt")
+            {
+                query = query.Where(d => d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học");
+            }
+
+            int totalActivities = await query.CountAsync();
+            int totalPages = (int)Math.Ceiling(totalActivities / (double)pageSize);
+            if (totalPages < 1) totalPages = 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+
+            var recentActivities = await query
                 .OrderByDescending(d => d.NgayDangKy)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -55,14 +78,16 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 TongSoHocVien = await _context.HocViens.CountAsync(),
                 TongSoDangKy = await _context.DangKyHocs.CountAsync(),
                 DangKyChoDuyet = await _context.DangKyHocs.CountAsync(d => d.TrangThai == "Chờ duyệt"),
-                DangKyDaDuyet = await _context.DangKyHocs.CountAsync(d => d.TrangThai == "Đã duyệt"),
+                DangKyDaDuyet = await _context.DangKyHocs.CountAsync(d => d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học"),
                 BuoiHocSapToi = await _context.BuoiHocs.CountAsync(b => b.ThoiGianBatDau > DateTime.Now && b.TrangThai == "Đã lên lịch"),
                 HocVienHoanThanh = soHoanThanh,
                 TyLeHoanThanh = tyLeHT,
                 DanhSachBuoiHoc = danhSachBuoiHoc,
                 HoatDongGanDay = recentActivities,
                 CurrentPage = page,
-                TotalPages = totalPages
+                TotalPages = totalPages,
+                SelectedStatus = status,
+                Search = search
             };
 
             return View(vm);

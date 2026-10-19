@@ -24,5 +24,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.ViewModels
         public List<BuoiHoc> DanhSachBuoiHoc { get; set; } = new List<BuoiHoc>();
         public int CurrentPage { get; set; } = 1;
         public int TotalPages { get; set; } = 1;
+        public string SelectedStatus { get; set; } = "all";
+        public string Search { get; set; } = "";
     }
 }

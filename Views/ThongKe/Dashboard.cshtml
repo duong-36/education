@@ -281,6 +281,8 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
 
     <!-- 4. Data Table Section: Hoạt động đăng ký gần đây -->
     <section id="dashboard-activity-section" class="bg-surface-white rounded-2xl p-6 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col gap-4 transition-opacity duration-200">
+        <input type="hidden" id="dashboardCurrentStatus" value="@Model.SelectedStatus" />
+        <input type="hidden" id="dashboardCurrentSearch" value="@Model.Search" />
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-border-subtle">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-primary-container/10 text-primary-container flex items-center justify-center">
@@ -296,12 +298,18 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">search</span>
-                    <input id="activitySearchInput" class="pl-9 pr-3 py-1.5 rounded-xl border border-border-standard text-brand-deep placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container w-full sm:w-60" placeholder="Tìm sinh viên, lớp..." type="text">
+                    <input id="activitySearchInput" value="@Model.Search" class="pl-9 pr-3 py-1.5 rounded-xl border border-border-standard text-brand-deep placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container w-full sm:w-60" placeholder="Tìm sinh viên, lớp..." type="text">
                 </div>
                 <div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl overflow-x-auto">
-                    <button class="activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm bg-surface-white text-primary-container font-bold shadow-xs whitespace-nowrap cursor-pointer" data-category="all" type="button">Tất cả</button>
-                    <button class="activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-outline hover:text-brand-deep whitespace-nowrap cursor-pointer" data-category="Chờ duyệt" type="button">Chờ duyệt (@Model.DangKyChoDuyet)</button>
-                    <button class="activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-outline hover:text-brand-deep whitespace-nowrap cursor-pointer" data-category="Đã duyệt" type="button">Đã duyệt (@Model.DangKyDaDuyet)</button>
+                    <a href="/ThongKe/Dashboard?page=1&status=all&search=@Model.Search" 
+                       onclick="event.preventDefault(); switchActivityStatus('all')" 
+                       class="activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm @(Model.SelectedStatus == "all" || string.IsNullOrEmpty(Model.SelectedStatus) ? "bg-surface-white text-primary-container font-bold shadow-xs" : "text-outline hover:text-brand-deep") whitespace-nowrap cursor-pointer">Tất cả</a>
+                    <a href="/ThongKe/Dashboard?page=1&status=Chờ duyệt&search=@Model.Search" 
+                       onclick="event.preventDefault(); switchActivityStatus('Chờ duyệt')" 
+                       class="activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm @(Model.SelectedStatus == "Chờ duyệt" ? "bg-surface-white text-primary-container font-bold shadow-xs" : "text-outline hover:text-brand-deep") whitespace-nowrap cursor-pointer">Chờ duyệt (@Model.DangKyChoDuyet)</a>
+                    <a href="/ThongKe/Dashboard?page=1&status=Đã duyệt&search=@Model.Search" 
+                       onclick="event.preventDefault(); switchActivityStatus('Đã duyệt')" 
+                       class="activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm @(Model.SelectedStatus == "Đã duyệt" ? "bg-surface-white text-primary-container font-bold shadow-xs" : "text-outline hover:text-brand-deep") whitespace-nowrap cursor-pointer">Đã duyệt (@Model.DangKyDaDuyet)</a>
                 </div>
             </div>
         </div>
@@ -413,7 +421,7 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
             <div class="inline-flex items-center gap-1">
                 @if (Model.CurrentPage > 1)
                 {
-                    <a href="/ThongKe/Dashboard?page=@(Model.CurrentPage - 1)" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
+                    <a href="/ThongKe/Dashboard?page=@(Model.CurrentPage - 1)&status=@Model.SelectedStatus&search=@Model.Search" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
                         Trước
                     </a>
                 }
@@ -424,25 +432,24 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
                     </span>
                 }
 
-                @for (int p = 1; p <= Model.TotalPages; p++)
+                @for (int p = Model.CurrentPage - 1; p <= Model.CurrentPage + 1; p++)
                 {
-                    if (p == Model.CurrentPage)
+                    if (p >= 1 && p <= Model.TotalPages)
                     {
-                        <span class="w-8 h-8 rounded-lg bg-primary-container text-surface-white font-label-md text-label-md font-bold flex items-center justify-center font-mono">@p</span>
-                    }
-                    else if (p <= 2 || p == Model.TotalPages || Math.Abs(p - Model.CurrentPage) <= 1)
-                    {
-                        <a href="/ThongKe/Dashboard?page=@p" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md flex items-center justify-center font-mono cursor-pointer">@p</a>
-                    }
-                    else if (p == 3 && Model.TotalPages > 4 && Model.CurrentPage > 3)
-                    {
-                        <span class="px-1 text-outline font-body-sm">...</span>
+                        if (p == Model.CurrentPage)
+                        {
+                            <span class="w-8 h-8 rounded-lg bg-primary-container text-surface-white font-label-md text-label-md font-bold flex items-center justify-center font-mono">@p</span>
+                        }
+                        else
+                        {
+                            <a href="/ThongKe/Dashboard?page=@p&status=@Model.SelectedStatus&search=@Model.Search" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md flex items-center justify-center font-mono cursor-pointer">@p</a>
+                        }
                     }
                 }
 
                 @if (Model.CurrentPage < Model.TotalPages)
                 {
-                    <a href="/ThongKe/Dashboard?page=@(Model.CurrentPage + 1)" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
+                    <a href="/ThongKe/Dashboard?page=@(Model.CurrentPage + 1)&status=@Model.SelectedStatus&search=@Model.Search" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
                         Sau
                     </a>
                 }
@@ -462,6 +469,11 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
     // Universal AJAX Page Loader for Dashboard Activities Table
     async function loadDashboardPage(url, pushState = true) {
         const section = document.getElementById('dashboard-activity-section');
+        const searchInput = document.getElementById('activitySearchInput');
+        const wasSearchFocused = (document.activeElement === searchInput);
+        const cursorStart = searchInput ? searchInput.selectionStart : 0;
+        const cursorEnd = searchInput ? searchInput.selectionEnd : 0;
+
         if (section) {
             section.classList.add('opacity-50', 'pointer-events-none');
         }
@@ -478,6 +490,14 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
             if (newSection && section) {
                 section.innerHTML = newSection.innerHTML;
                 initActivityFilters();
+
+                if (wasSearchFocused) {
+                    const newSearch = document.getElementById('activitySearchInput');
+                    if (newSearch) {
+                        newSearch.focus();
+                        newSearch.setSelectionRange(cursorStart, cursorEnd);
+                    }
+                }
             }
 
             if (pushState) {
@@ -534,41 +554,38 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
         }
     }
 
-    // Re-bindable filter logic
+    // Switch status filter preserving current search query
+    function switchActivityStatus(status) {
+        const searchInput = document.getElementById('activitySearchInput');
+        const search = searchInput ? searchInput.value.trim() : '';
+        const url = `/ThongKe/Dashboard?page=1&status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}`;
+        loadDashboardPage(url);
+    }
+
+    // Initialize activity search & enter handling
+    let dashboardSearchTimer = null;
     function initActivityFilters() {
-        const filterBtns = document.querySelectorAll('.activity-filter-btn');
-        const rows = document.querySelectorAll('.activity-row');
-
-        filterBtns.forEach(btn => {
-            btn.onclick = () => {
-                filterBtns.forEach(b => {
-                    b.className = 'activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-outline hover:text-brand-deep whitespace-nowrap cursor-pointer';
-                });
-                btn.className = 'activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm bg-surface-white text-primary-container font-bold shadow-xs whitespace-nowrap cursor-pointer';
-
-                const cat = btn.getAttribute('data-category');
-                rows.forEach(r => {
-                    if (cat === 'all' || r.getAttribute('data-category') === cat) {
-                        r.style.display = '';
-                    } else {
-                        r.style.display = 'none';
-                    }
-                });
-            };
-        });
-
         const searchInput = document.getElementById('activitySearchInput');
         if (searchInput) {
             searchInput.oninput = (e) => {
-                const q = e.target.value.toLowerCase().trim();
-                rows.forEach(r => {
-                    const txt = r.innerText.toLowerCase();
-                    if (txt.includes(q)) {
-                        r.style.display = '';
-                    } else {
-                        r.style.display = 'none';
-                    }
-                });
+                clearTimeout(dashboardSearchTimer);
+                dashboardSearchTimer = setTimeout(() => {
+                    const q = e.target.value.trim();
+                    const status = document.getElementById('dashboardCurrentStatus')?.value || 'all';
+                    const url = `/ThongKe/Dashboard?page=1&status=${encodeURIComponent(status)}&search=${encodeURIComponent(q)}`;
+                    loadDashboardPage(url);
+                }, 400);
+            };
+
+            searchInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(dashboardSearchTimer);
+                    const q = searchInput.value.trim();
+                    const status = document.getElementById('dashboardCurrentStatus')?.value || 'all';
+                    const url = `/ThongKe/Dashboard?page=1&status=${encodeURIComponent(status)}&search=${encodeURIComponent(q)}`;
+                    loadDashboardPage(url);
+                }
             };
         }
     }
