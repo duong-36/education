@@ -107,9 +107,6 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                     Quản lý lịch học
                 </h1>
             </div>
-            <span class="bg-primary/10 text-primary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full ml-2 hidden sm:inline-block font-semibold">
-                HK1 2024-2025
-            </span>
         </div>
 
         <div class="flex items-center flex-wrap gap-2.5">
@@ -125,13 +122,13 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                 </button>
             </div>
 
-            <button onclick="exportTableToCSV('danh-sach-lich-hoc.csv')" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer">
+            @* <button onclick="exportTableToCSV('danh-sach-lich-hoc.csv')" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer">
                 <span class="material-symbols-outlined text-[18px] text-primary">file_download</span>
                 <span class="hidden sm:inline">Xuất Excel</span>
-            </button>
+            </button> *@
             <button onclick="openDrawer('create')" class="inline-flex items-center gap-1.5 bg-secondary-container hover:bg-secondary text-surface-white font-label-md text-label-md px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-transform active:scale-95 cursor-pointer">
                 <span class="material-symbols-outlined text-[18px]">add_circle</span>
-                <span>+ Xếp lịch học</span>
+                <span> Xếp lịch học</span>
             </button>
         </div>
     </section>
@@ -432,7 +429,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
         <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
             <form method="get" action="/BuoiHoc/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form" onsubmit="event.preventDefault(); filterBuoiHocAjax();">
                 <!-- Search Field -->
-                <div class="relative flex-1 sm:w-72">
+                @* <div class="relative flex-1 sm:w-72">
                     <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
                     <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-8 py-2 rounded-xl text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="table-search" placeholder="Tìm theo giảng viên, phòng, lớp..." type="text"/>
                     @if (!string.IsNullOrEmpty(search))
@@ -441,7 +438,7 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                             <span class="material-symbols-outlined text-[16px]">cancel</span>
                         </a>
                     }
-                </div>
+                </div> *@
 
                 <!-- Filter Dropdown: Lớp học -->
                 <div class="relative">
@@ -483,10 +480,10 @@ Nội dung thực hiện: Module 5 - Quản lý lịch học: Thời khóa biể
                 <a href="/BuoiHoc/Index" onclick="event.preventDefault(); loadBuoiHocPage(this.href);" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors cursor-pointer" title="Làm mới bảng">
                     <span class="material-symbols-outlined text-[20px] block">refresh</span>
                 </a>
-                <button onclick="openDrawer('create')" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
+                @* <button onclick="openDrawer('create')" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">add</span>
                     <span>Tạo buổi mới</span>
-                </button>
+                </button> *@
             </div>
         </div>
 

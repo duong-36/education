@@ -75,19 +75,16 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
                     Kết quả học tập
                 </h1>
             </div>
-            <span class="bg-primary/10 text-primary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full ml-2 hidden sm:inline-block font-semibold">
-                HK1 2024-2025
-            </span>
         </div>
 
         <div class="flex items-center flex-wrap gap-2.5">
-            <button onclick="exportTableToCSV('bang-diem-sinh-vien.csv')" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer">
+            @* <button onclick="exportTableToCSV('bang-diem-sinh-vien.csv')" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer">
                 <span class="material-symbols-outlined text-[18px] text-primary">file_download</span>
                 <span class="hidden sm:inline">Xuất bảng điểm Excel</span>
-            </button>
+            </button> *@
             <button onclick="openDrawer('create')" class="inline-flex items-center gap-1.5 bg-secondary-container hover:bg-secondary text-surface-white font-label-md text-label-md px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-transform active:scale-95 cursor-pointer">
                 <span class="material-symbols-outlined text-[18px]">add_circle</span>
-                <span>+ Vào điểm mới</span>
+                <span> Vào điểm mới</span>
             </button>
         </div>
     </section>
@@ -155,7 +152,7 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
     <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
         <form method="get" action="/KetQuaHocTap/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form" onsubmit="event.preventDefault(); filterKetQuaAjax();">
             <!-- Search Field -->
-            <div class="relative flex-1 sm:w-80">
+            @* <div class="relative flex-1 sm:w-80">
                 <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
                 <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-8 py-2 rounded-xl text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" id="table-search" placeholder="Tìm theo tên SV, mã SV, lớp học..." type="text"/>
                 @if (!string.IsNullOrEmpty(search))
@@ -164,7 +161,7 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
                         <span class="material-symbols-outlined text-[16px]">cancel</span>
                     </a>
                 }
-            </div>
+            </div> *@
 
             <!-- Filter Dropdown: Lớp học -->
             <div class="relative">
@@ -480,15 +477,15 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
                 <div class="space-y-1.5">
                     <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider">Kết quả công nhận</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="cursor-pointer border-2 border-success-emerald bg-emerald-50/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all" id="label-ketqua-pass">
+                        <label class="cursor-pointer border-2 border-success-emerald bg-emerald-50/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all select-none" id="label-ketqua-pass" onclick="setKetQua('Hoàn thành', event)">
                             <input type="radio" name="ketQua" value="Hoàn thành" class="hidden" id="radio-ketqua-pass" checked/>
-                            <span class="material-symbols-outlined text-success-emerald text-[18px]">check_circle</span>
-                            <span class="font-label-md text-label-md text-success-emerald font-bold">Hoàn thành</span>
+                            <span class="material-symbols-outlined text-success-emerald text-[18px]" id="icon-ketqua-pass">check_circle</span>
+                            <span class="font-label-md text-label-md text-success-emerald font-bold" id="text-ketqua-pass">Hoàn thành</span>
                         </label>
-                        <label class="cursor-pointer border border-border-standard bg-surface-white rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors" id="label-ketqua-fail">
+                        <label class="cursor-pointer border border-border-standard bg-surface-white rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors select-none" id="label-ketqua-fail" onclick="setKetQua('Không hoàn thành', event)">
                             <input type="radio" name="ketQua" value="Không hoàn thành" class="hidden" id="radio-ketqua-fail"/>
-                            <span class="material-symbols-outlined text-danger-crimson text-[18px]">cancel</span>
-                            <span class="font-label-md text-label-md text-on-surface-variant font-bold">Chưa đạt</span>
+                            <span class="material-symbols-outlined text-outline text-[18px]" id="icon-ketqua-fail">cancel</span>
+                            <span class="font-label-md text-label-md text-on-surface-variant font-bold" id="text-ketqua-fail">Chưa đạt</span>
                         </label>
                     </div>
                 </div>
@@ -561,7 +558,47 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
         calculateTotalScore();
     }
 
-    function calculateTotalScore() {
+    function setKetQua(val, e) {
+        if (e) {
+            e.preventDefault();
+        }
+        const isPass = (val === 'Hoàn thành' || val === 'pass');
+        const radioPass = document.getElementById('radio-ketqua-pass');
+        const radioFail = document.getElementById('radio-ketqua-fail');
+        const labelPass = document.getElementById('label-ketqua-pass');
+        const labelFail = document.getElementById('label-ketqua-fail');
+        const iconPass = document.getElementById('icon-ketqua-pass');
+        const iconFail = document.getElementById('icon-ketqua-fail');
+        const textPass = document.getElementById('text-ketqua-pass');
+        const textFail = document.getElementById('text-ketqua-fail');
+
+        if (radioPass && radioFail) {
+            radioPass.checked = isPass;
+            radioFail.checked = !isPass;
+        }
+
+        if (labelPass && labelFail) {
+            if (isPass) {
+                labelPass.className = 'cursor-pointer border-2 border-success-emerald bg-emerald-50/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all select-none';
+                if (iconPass) iconPass.className = 'material-symbols-outlined text-success-emerald text-[18px]';
+                if (textPass) textPass.className = 'font-label-md text-label-md text-success-emerald font-bold';
+
+                labelFail.className = 'cursor-pointer border border-border-standard bg-surface-white rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors select-none';
+                if (iconFail) iconFail.className = 'material-symbols-outlined text-outline text-[18px]';
+                if (textFail) textFail.className = 'font-label-md text-label-md text-on-surface-variant font-bold';
+            } else {
+                labelPass.className = 'cursor-pointer border border-border-standard bg-surface-white rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors select-none';
+                if (iconPass) iconPass.className = 'material-symbols-outlined text-outline text-[18px]';
+                if (textPass) textPass.className = 'font-label-md text-label-md text-on-surface-variant font-bold';
+
+                labelFail.className = 'cursor-pointer border-2 border-danger-crimson bg-red-50/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all select-none';
+                if (iconFail) iconFail.className = 'material-symbols-outlined text-danger-crimson text-[18px]';
+                if (textFail) textFail.className = 'font-label-md text-label-md text-danger-crimson font-bold';
+            }
+        }
+    }
+
+    function calculateTotalScore(autoSelect = true) {
         const cc = parseFloat(document.getElementById('drawer-cc').value) || 0;
         const ck = parseFloat(document.getElementById('drawer-ck').value) || 0;
         const total = Math.round((cc * 0.3 + ck * 0.7) * 100) / 100;
@@ -574,14 +611,8 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
         else if (total >= 4.0) grade = 'D';
         document.getElementById('computed-grade').innerText = grade;
 
-        if (total >= 5.0) {
-            document.getElementById('radio-ketqua-pass').checked = true;
-            document.getElementById('label-ketqua-pass').className = 'cursor-pointer border-2 border-success-emerald bg-emerald-50/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all';
-            document.getElementById('label-ketqua-fail').className = 'cursor-pointer border border-border-standard bg-surface-white rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors';
-        } else {
-            document.getElementById('radio-ketqua-fail').checked = true;
-            document.getElementById('label-ketqua-fail').className = 'cursor-pointer border-2 border-danger-crimson bg-red-50/50 rounded-xl p-3 flex items-center justify-center gap-2 transition-all';
-            document.getElementById('label-ketqua-pass').className = 'cursor-pointer border border-border-standard bg-surface-white rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors';
+        if (autoSelect) {
+            setKetQua(total >= 5.0 ? 'Hoàn thành' : 'Không hoàn thành');
         }
     }
 
@@ -602,7 +633,13 @@ Nội dung thực hiện: Module 5 - Quản lý Kết quả học tập CRUD chu
         document.getElementById('drawer-ck').value = parseFloat(row.dataset.ck || 0).toFixed(1);
         document.getElementById('drawer-nhanxet').value = row.dataset.nhanxet || '';
 
-        calculateTotalScore();
+        // Calculate score without overriding saved status
+        calculateTotalScore(false);
+
+        // Load saved status from row
+        const savedKetQua = row.dataset.ketqua || (parseFloat(row.dataset.tk || 0) >= 5.0 ? 'Hoàn thành' : 'Không hoàn thành');
+        setKetQua(savedKetQua);
+
         drawer.classList.remove('hidden');
     }
 
