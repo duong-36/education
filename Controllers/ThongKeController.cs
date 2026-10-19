@@ -71,12 +71,24 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [HttpPost]
         public async Task<IActionResult> DuyetNhanh(int id)
         {
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
             var dangKy = await _context.DangKyHocs.FindAsync(id);
             if (dangKy != null)
             {
                 dangKy.TrangThai = "Đã duyệt";
                 dangKy.NgayXuLy = DateTime.Now;
                 await _context.SaveChangesAsync();
+                if (isAjax)
+                {
+                    return Json(new { success = true, message = "Đã phê duyệt đăng ký thành công!" });
+                }
+            }
+            else
+            {
+                if (isAjax)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy hồ sơ đăng ký." });
+                }
             }
             return RedirectToAction(nameof(Dashboard));
         }

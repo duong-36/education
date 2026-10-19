@@ -280,7 +280,7 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
     </section>
 
     <!-- 4. Data Table Section: Hoạt động đăng ký gần đây -->
-    <section class="bg-surface-white rounded-2xl p-6 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col gap-4">
+    <section id="dashboard-activity-section" class="bg-surface-white rounded-2xl p-6 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col gap-4 transition-opacity duration-200">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-border-subtle">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-primary-container/10 text-primary-container flex items-center justify-center">
@@ -379,7 +379,7 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
                                     <div class="inline-flex items-center gap-1">
                                         @if (item.TrangThai == "Chờ duyệt")
                                         {
-                                            <form asp-controller="ThongKe" asp-action="DuyetNhanh" asp-route-id="@item.MaDangKy" method="post" class="inline">
+                                            <form asp-controller="ThongKe" asp-action="DuyetNhanh" asp-route-id="@item.MaDangKy" method="post" class="inline" onsubmit="event.preventDefault(); submitDuyetNhanh(this);">
                                                 <button class="p-1 rounded-lg text-outline hover:text-success-emerald hover:bg-success-emerald/10 transition-colors cursor-pointer" title="Duyệt nhanh" type="submit">
                                                     <span class="material-symbols-outlined text-[19px]">check_circle</span>
                                                 </button>
@@ -413,7 +413,7 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
             <div class="inline-flex items-center gap-1">
                 @if (Model.CurrentPage > 1)
                 {
-                    <a href="?page=@(Model.CurrentPage - 1)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md">
+                    <a href="/ThongKe/Dashboard?page=@(Model.CurrentPage - 1)" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
                         Trước
                     </a>
                 }
@@ -424,13 +424,25 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
                     </span>
                 }
 
-                <span class="px-2.5 py-1 rounded-lg bg-primary-container text-surface-white font-label-md text-label-md font-bold font-mono">
-                    @Model.CurrentPage
-                </span>
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    if (p == Model.CurrentPage)
+                    {
+                        <span class="w-8 h-8 rounded-lg bg-primary-container text-surface-white font-label-md text-label-md font-bold flex items-center justify-center font-mono">@p</span>
+                    }
+                    else if (p <= 2 || p == Model.TotalPages || Math.Abs(p - Model.CurrentPage) <= 1)
+                    {
+                        <a href="/ThongKe/Dashboard?page=@p" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md flex items-center justify-center font-mono cursor-pointer">@p</a>
+                    }
+                    else if (p == 3 && Model.TotalPages > 4 && Model.CurrentPage > 3)
+                    {
+                        <span class="px-1 text-outline font-body-sm">...</span>
+                    }
+                }
 
                 @if (Model.CurrentPage < Model.TotalPages)
                 {
-                    <a href="?page=@(Model.CurrentPage + 1)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md">
+                    <a href="/ThongKe/Dashboard?page=@(Model.CurrentPage + 1)" onclick="event.preventDefault(); loadDashboardPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
                         Sau
                     </a>
                 }
@@ -447,13 +459,88 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
 
 @section Scripts {
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // 1. Live Filter by Category for Recent Activities Table
+    // Universal AJAX Page Loader for Dashboard Activities Table
+    async function loadDashboardPage(url, pushState = true) {
+        const section = document.getElementById('dashboard-activity-section');
+        if (section) {
+            section.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newSection = doc.getElementById('dashboard-activity-section');
+            if (newSection && section) {
+                section.innerHTML = newSection.innerHTML;
+                initActivityFilters();
+            }
+
+            if (pushState) {
+                window.history.pushState({ url: url }, '', url);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải trang Dashboard:', err);
+            window.location.href = url;
+        } finally {
+            if (section) {
+                section.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+    }
+
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.url) {
+            loadDashboardPage(e.state.url, false);
+        } else {
+            loadDashboardPage(window.location.href, false);
+        }
+    });
+
+    // Handle AJAX DuyetNhanh
+    async function submitDuyetNhanh(form) {
+        const btn = form.querySelector('button');
+        if (btn) btn.disabled = true;
+
+        try {
+            const formData = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await res.json();
+                if (data.success) {
+                    if (window.showToast) window.showToast(data.message, 'success');
+                    await loadDashboardPage(window.location.href, false);
+                } else {
+                    if (window.showToast) window.showToast(data.message, 'error');
+                }
+            } else {
+                await loadDashboardPage(window.location.href, false);
+            }
+        } catch (err) {
+            console.error('Lỗi duyệt nhanh:', err);
+            if (window.showToast) window.showToast('Có lỗi xảy ra khi phê duyệt.', 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    // Re-bindable filter logic
+    function initActivityFilters() {
         const filterBtns = document.querySelectorAll('.activity-filter-btn');
         const rows = document.querySelectorAll('.activity-row');
 
         filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.onclick = () => {
                 filterBtns.forEach(b => {
                     b.className = 'activity-filter-btn px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-outline hover:text-brand-deep whitespace-nowrap cursor-pointer';
                 });
@@ -467,13 +554,12 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
                         r.style.display = 'none';
                     }
                 });
-            });
+            };
         });
 
-        // 2. Search Input filtering
         const searchInput = document.getElementById('activitySearchInput');
         if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
+            searchInput.oninput = (e) => {
                 const q = e.target.value.toLowerCase().trim();
                 rows.forEach(r => {
                     const txt = r.innerText.toLowerCase();
@@ -483,8 +569,12 @@ Nội dung thực hiện: Giao diện Dashboard (Module 5) - Phong cách Prep.vn
                         r.style.display = 'none';
                     }
                 });
-            });
+            };
         }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initActivityFilters();
     });
 </script>
 }
