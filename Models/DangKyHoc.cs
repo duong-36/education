@@ -38,9 +38,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models
         public double SoTienDaDong { get; set; }
 
         [ForeignKey("MaHocVien")]
-        public virtual HocVien HocVien { get; set; }
+        public virtual HocVien? HocVien { get; set; }
 
         [ForeignKey("MaLop")]
-        public virtual LopHoc LopHoc { get; set; }
+        public virtual LopHoc? LopHoc { get; set; }
     }
 }

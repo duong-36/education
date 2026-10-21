@@ -1,3 +1,13 @@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var session = HttpContextAccessor.HttpContext?.Session;
+    string userHoTen = session?.GetString("HoTen") ?? "Admin Quản trị viên";
+    string userVaiTro = session?.GetString("VaiTro") ?? "Admin";
+    string userEmail = session?.GetString("Email") ?? "admin@uneti.edu.vn";
+    int? maTaiKhoan = session?.GetInt32("MaTaiKhoan");
+    bool isStudent = userVaiTro == "Học viên";
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -18,8 +28,8 @@
         ::-webkit-scrollbar { display: none; }
         .custom-scrollbar::-webkit-scrollbar {
             display: block !important;
-            height: 7px !important;
-            width: 7px !important;
+            height: 6px !important;
+            width: 6px !important;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #F1F5F9;
@@ -148,80 +158,146 @@
 <body class="bg-canvas-base font-body-md text-body-md text-on-surface antialiased min-h-screen">
     <div class="flex min-h-screen w-full bg-canvas-base">
         <!-- Left Sidebar Navigation (Prep.vn Style) -->
-        <aside class="w-64 lg:w-72 flex-shrink-0 bg-surface-white border-r border-border-standard h-screen sticky top-0 flex flex-col justify-between p-5 z-40 select-none">
-            <div class="flex flex-col gap-6">
+        <aside class="w-64 lg:w-72 flex-shrink-0 bg-surface-white border-r border-border-standard h-screen sticky top-0 flex flex-col justify-between p-4 lg:p-5 z-40 select-none">
+            <div class="flex flex-col gap-4 overflow-hidden">
                 <!-- Logo & School Brand -->
                 <div class="flex flex-col gap-3">
                     <a href="/ThongKe/Dashboard" class="flex items-center gap-3 group">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-primary-container text-surface-white flex items-center justify-center font-bold text-xl shadow-sm shadow-primary/20 group-hover:scale-105 transition-transform">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-primary-container text-surface-white flex items-center justify-center font-bold text-xl shadow-sm shadow-primary/20 group-hover:scale-105 transition-transform shrink-0">
                             <span class="material-symbols-outlined text-[24px]">school</span>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="font-headline-sm text-[16px] text-brand-deep tracking-tight font-extrabold leading-tight">UNETI ĐÀO TẠO</span>
-                            <span class="font-label-sm text-[10px] text-outline leading-tight">Cổng Quản Lý Học Phần</span>
+                        <div class="flex flex-col min-w-0">
+                            <span class="font-headline-sm text-[15px] text-brand-deep tracking-tight font-extrabold leading-tight truncate">UNETI ĐÀO TẠO</span>
+                            <span class="font-label-sm text-[10px] text-outline leading-tight truncate">Quản Lý Đăng Ký Khóa Học</span>
                         </div>
                     </a>
 
                     <!-- Semester Selector -->
-                    <button class="w-full inline-flex items-center justify-between px-3 py-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-brand-deep font-label-md text-label-md transition-colors border border-border-subtle cursor-pointer" type="button">
+                    <button class="w-full inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-brand-deep font-label-md text-label-md transition-colors border border-border-subtle cursor-pointer" type="button">
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-base text-primary-container leading-none">calendar_month</span>
-                            <span class="font-semibold text-xs">Học kỳ 1 - 2024-2025</span>
+                            <span class="material-symbols-outlined text-sm text-primary leading-none">calendar_month</span>
+                            <span class="font-semibold text-xs">Năm học 2024 - 2025</span>
                         </div>
                         <span class="material-symbols-outlined text-xs leading-none text-outline">arrow_drop_down</span>
                     </button>
                 </div>
 
-                <!-- Vertical Navigation Links -->
-                <nav class="flex flex-col gap-1.5" id="sidebar-nav">
-                    <div class="text-[11px] font-bold text-outline uppercase tracking-wider px-3 mb-1 font-label-sm">Quản trị đào tạo</div>
-                    
-                    <a href="/ThongKe/Dashboard" data-url="/thongke/dashboard" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-[14px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[20px] text-outline">dashboard</span>
-                            <span class="">Tổng quan</span>
+                <!-- Vertical Navigation Links (Scrollable) -->
+                <nav class="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-230px)] pr-1 custom-scrollbar" id="sidebar-nav">
+                    @if (!isStudent)
+                    {
+                        <div class="text-[10px] font-bold text-outline uppercase tracking-wider px-3 mt-1 mb-1 font-label-sm">Quản trị đào tạo</div>
+                        
+                        <a href="/ThongKe/Dashboard" data-url="/thongke/dashboard" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">dashboard</span>
+                                <span>Tổng quan</span>
+                            </div>
+                        </a>
+
+                        <a href="/ChuongTrinhDaoTao/Index" data-url="/chuongtrinhdaotao" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">layers</span>
+                                <span>Chương trình ĐT</span>
+                            </div>
+                        </a>
+
+                        <a href="/LopHoc/Index" data-url="/lophoc" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">meeting_room</span>
+                                <span>Quản lý Lớp học</span>
+                            </div>
+                        </a>
+
+                        <a href="/DangKyHoc/Index" data-url="/dangkyhoc" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">how_to_reg</span>
+                                <span>Xét duyệt & Học phí</span>
+                            </div>
+                        </a>
+
+                        <a href="/BuoiHoc/Index" data-url="/buoihoc" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">calendar_today</span>
+                                <span>Lịch học (Buổi học)</span>
+                            </div>
+                        </a>
+
+                        <a href="/KetQuaHocTap/Index" data-url="/ketquahoctap" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">workspace_premium</span>
+                                <span>Kết quả học tập</span>
+                            </div>
+                        </a>
+
+                        <a href="/ThongKe/Index" data-url="/thongke/index" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">bar_chart</span>
+                                <span>Báo cáo thống kê</span>
+                            </div>
+                        </a>
+
+                        <a href="/HocVien/Index" data-url="/hocvien" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-[19px] text-outline">group</span>
+                                <span>Quản lý Học viên</span>
+                            </div>
+                        </a>
+
+                        @if (userVaiTro == "Admin")
+                        {
+                            <a href="/TaiKhoan/Index" data-url="/taikhoan" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="material-symbols-outlined text-[19px] text-outline">manage_accounts</span>
+                                    <span>Quản lý Tài khoản</span>
+                                </div>
+                            </a>
+                        }
+                    }
+
+                    <div class="text-[10px] font-bold text-outline uppercase tracking-wider px-3 mt-2.5 mb-1 font-label-sm">Cổng học viên</div>
+
+                    <a href="/CongHocVien/DangKy" data-url="/conghocvien/dangky" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-[19px] text-outline">app_registration</span>
+                            <span>Đăng ký học phần</span>
                         </div>
                     </a>
 
-                    <a href="/BuoiHoc/Index" data-url="/buoihoc" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-[14px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[20px] text-outline">calendar_today</span>
-                            <span class="">Lịch học (Buổi học)</span>
+                    <a href="/CongHocVien/TienTrinh" data-url="/conghocvien/tientrinh" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-[19px] text-outline">timeline</span>
+                            <span>Tiến trình & Kết quả</span>
                         </div>
                     </a>
 
-                    <a href="/KetQuaHocTap/Index" data-url="/ketquahoctap" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-[14px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[20px] text-outline">workspace_premium</span>
-                            <span class="">Kết quả học tập</span>
-                        </div>
-                    </a>
-
-                    <a href="/ThongKe/Index" data-url="/thongke/index" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-[14px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[20px] text-outline">bar_chart</span>
-                            <span class="">Báo cáo thống kê</span>
+                    <a href="/CongHocVien/HoSo" data-url="/conghocvien/hoso" class="sidebar-link flex items-center justify-between px-3 py-2 rounded-xl font-medium text-[13px] text-on-surface-variant hover:text-brand-deep hover:bg-surface-container-low transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-[19px] text-outline">person</span>
+                            <span>Hồ sơ cá nhân</span>
                         </div>
                     </a>
                 </nav>
             </div>
 
             <!-- Sidebar Bottom User Profile -->
-            <div class="flex flex-col gap-3 pt-4 border-t border-border-standard">
-                <div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low/60 hover:bg-surface-container-low transition-colors cursor-pointer">
+            <div class="flex flex-col gap-2 pt-3 border-t border-border-standard">
+                <div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low/60 hover:bg-surface-container-low transition-colors">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary-container text-surface-white font-bold text-xs flex items-center justify-center ring-2 ring-border-standard flex-shrink-0">
-                            SV5
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-primary-container text-surface-white font-bold text-xs flex items-center justify-center ring-2 ring-border-standard shrink-0">
+                            @(string.IsNullOrWhiteSpace(userHoTen) ? "U" : userHoTen.Substring(0, 1).ToUpper())
                         </div>
                         <div class="flex flex-col text-left truncate">
-                            <span class="font-label-md text-label-md text-brand-deep leading-tight font-semibold truncate">Nguyễn Tùng Dương</span>
-                            <span class="font-label-sm text-label-sm text-outline leading-tight font-mono">MS: 23103100003</span>
+                            <span class="font-label-md text-xs text-brand-deep leading-tight font-bold truncate">@userHoTen</span>
+                            <span class="font-label-sm text-[11px] text-outline leading-tight font-medium">@userVaiTro</span>
                         </div>
                     </div>
-                    <span class="material-symbols-outlined text-outline text-base">verified_user</span>
+                    <a href="/TaiKhoan/Logout" title="Đăng xuất" class="p-1.5 rounded-lg text-outline hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                    </a>
                 </div>
-                <div class="flex items-center justify-between text-[11px] text-outline px-1 font-label-sm">
-                    <span class="">Module 5 • .NET 10</span>
+                <div class="flex items-center justify-between text-[10px] text-outline px-1 font-label-sm">
+                    <span>Đề tài 16 • .NET 10</span>
                     <span class="inline-flex items-center gap-1 text-success-emerald font-semibold">
                         <span class="w-1.5 h-1.5 rounded-full bg-success-emerald animate-pulse"></span>Trực tuyến
                     </span>
@@ -236,11 +312,16 @@
                 <div class="flex items-center gap-3">
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-base pointer-events-none">search</span>
-                        <input class="w-64 sm:w-80 pl-9 pr-10 py-1.5 rounded-xl bg-canvas-base border border-border-standard text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container transition-all" placeholder="Tìm kiếm học phần, sinh viên, phòng..." type="text">
+                        <input class="w-64 sm:w-80 pl-9 pr-10 py-1.5 rounded-xl bg-canvas-base border border-border-standard text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container transition-all" placeholder="Tìm kiếm nhanh..." type="text">
                         <span class="absolute right-2.5 top-1/2 -translate-y-1/2 font-label-sm text-label-sm text-outline border border-border-standard rounded px-1.5 py-0.5 bg-surface-white pointer-events-none">⌘K</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-space-sm">
+                    <!-- Quick Role Switch / Test Account helper -->
+                    <a href="/TaiKhoan/Login" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-brand-deep font-semibold text-xs transition-colors border border-border-subtle" title="Chuyển tài khoản">
+                        <span class="material-symbols-outlined text-sm text-primary">switch_account</span>
+                        <span class="hidden sm:inline">@userVaiTro</span>
+                    </a>
                     <button onclick="location.reload()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-white border border-border-standard text-brand-deep hover:bg-canvas-base font-label-md text-label-md transition-colors text-xs shadow-xs cursor-pointer" type="button" title="Làm mới trang">
                         <span class="material-symbols-outlined text-sm text-outline">sync</span>
                         <span class="hidden sm:inline">Đồng bộ</span>
@@ -269,7 +350,7 @@
                         <span class="">Hệ thống Quản lý Khóa học &amp; Đào tạo</span>
                     </div>
                     <div class="font-label-sm text-label-sm text-outline">
-                        © 2025 UNETI. Thực hiện bởi: <strong class="text-brand-deep">Nguyễn Tùng Dương (23103100003)</strong> - Module 5.
+                        © 2025 UNETI. Thực hiện bởi: <strong class="text-brand-deep">Nguyễn Tùng Dương (23103100003)</strong> - Nhóm 5 (Đề tài 16).
                     </div>
                 </div>
             </footer>
@@ -283,15 +364,15 @@
             const links = document.querySelectorAll('.sidebar-link');
             
             links.forEach(link => {
-                const targetUrl = link.getAttribute('data-url');
+                const targetUrl = link.getAttribute('data-url').toLowerCase();
                 const isMatch = (currentPath === '/' && targetUrl.includes('dashboard')) || 
                                 (currentPath.includes(targetUrl));
 
                 if (isMatch) {
-                    link.className = 'sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-primary-container text-on-primary font-bold shadow-sm transition-all';
+                    link.className = 'sidebar-link flex items-center justify-between px-3 py-2 rounded-xl bg-primary text-surface-white font-bold shadow-sm transition-all';
                     const icon = link.querySelector('span.material-symbols-outlined');
                     if (icon) {
-                        icon.className = 'material-symbols-outlined text-[20px] text-white';
+                        icon.className = 'material-symbols-outlined text-[19px] text-white';
                     }
                 }
             });
@@ -335,7 +416,7 @@
             closeBtn.onclick = removeToast;
 
             container.appendChild(toast);
-            void toast.offsetWidth; // trigger reflow
+            void toast.offsetWidth;
             toast.classList.remove('opacity-0', '-translate-y-2');
             toast.classList.add('opacity-100', 'translate-y-0');
 

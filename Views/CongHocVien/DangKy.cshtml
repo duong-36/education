@@ -1,0 +1,302 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.LopHoc>
+@{
+    // Họ và tên: [Tên SV3]
+    // Mã sinh viên: [Mã SV3]
+    // Nội dung thực hiện: Cổng Học viên - Đăng ký Lớp học (Module 3) - Phong cách Prep.vn
+    ViewData["Title"] = "Cổng Đăng Ký Học Phần";
+    var currentStudent = ViewBag.CurrentStudent as QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.HocVien;
+    var chuongTrinhList = ViewBag.ChuongTrinhList as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.ChuongTrinhDaoTao> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.ChuongTrinhDaoTao>();
+    var siSoMap = ViewBag.SiSoMap as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var myRegistrations = ViewBag.MyRegistrations as Dictionary<int, QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc> ?? new Dictionary<int, QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc>();
+    string search = ViewBag.Search ?? "";
+    int? selectedMaCT = ViewBag.SelectedMaChuongTrinh;
+    string selectedTrinhDo = ViewBag.SelectedTrinhDo ?? "";
+}
+
+<div class="flex flex-col gap-y-6">
+    <!-- Sub-header Navigation Bar -->
+    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-standard">
+        <div>
+            <div class="flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase tracking-wider mb-1">
+                <span>CỔNG HỌC VIÊN</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-brand-deep font-semibold">ĐĂNG KÝ HỌC PHẦN</span>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-brand-deep font-bold tracking-tight">
+                Các Lớp Học Đang Mở Đăng Ký
+            </h1>
+        </div>
+
+        @if (currentStudent != null)
+        {
+            <div class="flex items-center gap-2.5 bg-surface-white px-4 py-2 rounded-xl border border-border-subtle shadow-xs">
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                    @(string.IsNullOrWhiteSpace(currentStudent.HoTen) ? "HV" : currentStudent.HoTen.Substring(0, 1).ToUpper())
+                </div>
+                <div class="text-xs">
+                    <span class="text-outline block text-[11px]">Đang đăng ký dưới tên:</span>
+                    <strong class="text-brand-deep">@currentStudent.HoTen</strong>
+                    <span class="text-outline font-mono text-[10px]">#HV@currentStudent.MaHocVien.ToString("D3")</span>
+                </div>
+            </div>
+        }
+    </section>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-wrap items-center justify-between gap-3">
+        <form method="get" class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+            <!-- Search Input -->
+            <div class="relative flex-1 min-w-[220px]">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">search</span>
+                <input type="text" name="search" value="@search" placeholder="Tìm kiếm theo tên khóa học, giảng viên..."
+                       class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep" />
+            </div>
+
+            <!-- Filter CTĐT -->
+            <div class="min-w-[180px]">
+                <select name="maChuongTrinh" onchange="this.form.submit()" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
+                    <option value="">Tất cả chương trình</option>
+                    @foreach (var ct in chuongTrinhList)
+                    {
+                        <!option value="@ct.MaChuongTrinh" @(selectedMaCT == ct.MaChuongTrinh ? "selected" : "")>@ct.TenChuongTrinh</!option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filter Trình độ -->
+            <div class="min-w-[140px]">
+                <select name="trinhDo" onchange="this.form.submit()" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
+                    <option value="">Tất cả trình độ</option>
+                    <!option value="Cơ bản" @(selectedTrinhDo == "Cơ bản" ? "selected" : "")>Cơ bản</!option>
+                    <!option value="Nâng cao" @(selectedTrinhDo == "Nâng cao" ? "selected" : "")>Nâng cao</!option>
+                    <!option value="Chuyên sâu" @(selectedTrinhDo == "Chuyên sâu" ? "selected" : "")>Chuyên sâu</!option>
+                </select>
+            </div>
+
+            <button type="submit" class="bg-primary hover:bg-[#0047b3] text-surface-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
+                Lọc
+            </button>
+            <a asp-action="DangKy" class="text-xs text-outline hover:text-primary font-medium px-2 py-2">Đặt lại</a>
+        </form>
+    </div>
+
+    <!-- Cards Grid -->
+    @if (!Model.Any())
+    {
+        <div class="bg-surface-white rounded-2xl border border-border-subtle p-12 text-center text-outline shadow-xs">
+            <span class="material-symbols-outlined text-[48px] opacity-40 mb-2 text-primary">menu_book</span>
+            <h3 class="text-base font-bold text-brand-deep mb-1">Hiện không có lớp học nào khả dụng</h3>
+            <p class="text-xs max-w-md mx-auto">Vui lòng thử lại với các tiêu chí tìm kiếm khác hoặc quay lại sau khi có đợt tuyển sinh mới.</p>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var lop in Model)
+            {
+                int currentEnrolled = siSoMap.ContainsKey(lop.MaLop) ? siSoMap[lop.MaLop] : 0;
+                int maxCapacity = lop.SiSoToiDa;
+                int remainingSeats = Math.Max(0, maxCapacity - currentEnrolled);
+                double fillPercent = maxCapacity > 0 ? Math.Min(100.0, Math.Round((double)currentEnrolled / maxCapacity * 100, 1)) : 0;
+                bool isFull = remainingSeats <= 0;
+                bool isExpired = lop.HanDangKy < DateTime.Today;
+                bool isRegistered = myRegistrations.ContainsKey(lop.MaLop);
+                string myStatus = isRegistered ? myRegistrations[lop.MaLop].TrangThai : "";
+
+                <div class="bg-surface-white rounded-2xl border border-border-subtle hover:border-primary/40 p-5 shadow-[0_2px_12px_rgba(0,22,86,0.03)] hover:shadow-md transition-all flex flex-col justify-between group">
+                    <div>
+                        <!-- Top Header of Card -->
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                @lop.TrinhDoDauVao
+                            </span>
+                            <span class="font-mono text-xs font-bold text-emerald-700">
+                                @lop.HocPhi.ToString("N0") đ
+                            </span>
+                        </div>
+
+                        <!-- Class Name -->
+                        <h3 class="font-bold text-base text-brand-deep group-hover:text-primary transition-colors mb-1 line-clamp-2">
+                            @lop.TenLop
+                        </h3>
+                        <p class="text-xs text-outline mb-4">
+                            @(lop.ChuongTrinhDaoTao?.TenChuongTrinh ?? "Chương trình chuyên biệt")
+                        </p>
+
+                        <!-- Key Specs -->
+                        <div class="space-y-2 text-xs border-y border-border-subtle py-3 mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-outline flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[15px] text-primary">person</span>
+                                    Giảng viên:
+                                </span>
+                                <span class="font-semibold text-brand-deep">@lop.GiangVien</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-outline flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[15px] text-primary">event_available</span>
+                                    Khai giảng:
+                                </span>
+                                <span class="font-mono font-medium text-brand-deep">@lop.NgayKhaiGiang.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-outline flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
+                                    Thời lượng:
+                                </span>
+                                <span class="font-mono font-medium text-brand-deep">@lop.SoBuoiHoc buổi</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-outline flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[15px] text-rose-500">alarm</span>
+                                    Hạn đăng ký:
+                                </span>
+                                <span class="font-mono font-medium @(isExpired ? "text-rose-600" : "text-brand-deep")">
+                                    @lop.HanDangKy.ToString("dd/MM/yyyy")
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Capacity Bar -->
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="text-outline">Chỉ tiêu: <strong class="text-brand-deep font-mono">@currentEnrolled / @maxCapacity</strong></span>
+                                <span class="font-bold @(isFull ? "text-rose-600" : "text-primary")">
+                                    @(isFull ? "Hết chỗ" : $"Còn {remainingSeats} chỗ")
+                                </span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div class="h-2 rounded-full transition-all duration-300 @(fillPercent >= 100 ? "bg-rose-500" : fillPercent >= 80 ? "bg-amber-500" : "bg-primary")"
+                                     style="width: @fillPercent%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div>
+                        @if (isRegistered)
+                        {
+                            <div class="w-full py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-[18px]">verified</span>
+                                <span>Đã đăng ký (@myStatus)</span>
+                            </div>
+                        }
+                        else if (isExpired)
+                        {
+                            <button disabled class="w-full py-2.5 px-3 rounded-xl bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed">
+                                Đã hết hạn đăng ký
+                            </button>
+                        }
+                        else if (isFull)
+                        {
+                            <button disabled class="w-full py-2.5 px-3 rounded-xl bg-rose-50 text-rose-400 text-xs font-semibold cursor-not-allowed">
+                                Lớp đã đủ sĩ số
+                            </button>
+                        }
+                        else
+                        {
+                            <button onclick="openRegisterModal(@lop.MaLop, '@lop.TenLop.Replace("'", "\\'")')" class="w-full py-2.5 px-3 rounded-xl bg-primary hover:bg-[#0047b3] text-surface-white text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+                                <span>Đăng ký ngay</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Register Modal -->
+<div id="register-modal" class="fixed inset-0 bg-brand-deep/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div class="bg-surface-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="register-modal-content">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[24px]">school</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-brand-deep">Xác Nhận Đăng Ký Lớp Học</h3>
+                <p class="text-xs text-outline" id="modal-class-name">Lớp học...</p>
+            </div>
+        </div>
+
+        <form id="registerForm" onsubmit="submitRegistration(event)" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="modal-MaLop" name="maLop" value="" />
+
+            <div>
+                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Ghi chú cho giáo vụ (tùy chọn)</label>
+                <textarea id="modal-GhiChu" name="ghiChu" rows="3" placeholder="Mong muốn, trình độ hiện tại hoặc yêu cầu hỗ trợ..."
+                          class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep"></textarea>
+            </div>
+
+            <div class="bg-surface-container-lowest p-3 rounded-xl border border-border-subtle text-[11px] text-outline">
+                <div class="flex items-center gap-1 text-primary font-bold mb-1">
+                    <span class="material-symbols-outlined text-[14px]">info</span>
+                    <span>Quy trình xử lý</span>
+                </div>
+                Sau khi gửi yêu cầu, hồ sơ sẽ ở trạng thái <strong>Chờ duyệt</strong>. Giáo vụ sẽ thẩm định và gửi thông báo nộp học phí trước ngày khai giảng.
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeRegisterModal()" class="px-4 py-2 text-xs font-semibold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-surface-container-high transition-colors">
+                    Hủy
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-semibold text-surface-white bg-primary hover:bg-[#0047b3] rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px]">check</span>
+                    <span>Xác nhận gửi đơn</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openRegisterModal(maLop, className) {
+        document.getElementById('modal-MaLop').value = maLop;
+        document.getElementById('modal-class-name').innerText = className;
+        document.getElementById('modal-GhiChu').value = '';
+
+        const modal = document.getElementById('register-modal');
+        const content = document.getElementById('register-modal-content');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeRegisterModal() {
+        const modal = document.getElementById('register-modal');
+        const content = document.getElementById('register-modal-content');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+
+    function submitRegistration(e) {
+        e.preventDefault();
+        const form = document.getElementById('registerForm');
+        const formData = new FormData(form);
+
+        fetch('/CongHocVien/DangKyLopPost', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                closeRegisterModal();
+                if (window.showToast) window.showToast(res.message, 'success');
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                if (window.showToast) window.showToast(res.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showToast) window.showToast('Có lỗi xảy ra khi gửi đăng ký!', 'error');
+        });
+    }
+</script>
+}

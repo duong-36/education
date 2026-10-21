@@ -1,0 +1,498 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.TaiKhoan>
+@{
+    // Họ và tên: [Tên SV1]
+    // Mã sinh viên: [Mã SV1]
+    // Nội dung thực hiện: Giao diện Quản lý Tài khoản (Module 1) - Phong cách Prep.vn
+    ViewData["Title"] = "Quản lý Tài khoản";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+    string search = ViewBag.Search ?? "";
+    string selectedVaiTro = ViewBag.SelectedVaiTro ?? "";
+    string selectedTrangThai = ViewBag.SelectedTrangThai ?? "";
+}
+
+<div id="taikhoan-content-area" class="flex flex-col gap-y-6 transition-opacity duration-200">
+    <!-- Sub-header Navigation Bar -->
+    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-standard">
+        <div>
+            <div class="flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase tracking-wider mb-1">
+                <span>HỆ THỐNG</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-brand-deep font-semibold">TÀI KHOẢN & PHÂN QUYỀN</span>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-brand-deep font-bold tracking-tight">
+                Quản lý người dùng hệ thống
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <button onclick="openDrawer('create')" class="inline-flex items-center gap-1.5 bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+                <span class="material-symbols-outlined text-[18px]">person_add</span>
+                <span>Thêm tài khoản</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- 3 Stat Cards (Top KPI) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Tổng tài khoản</span>
+                <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[20px]">group</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-brand-deep tracking-tight font-black font-mono">@ViewBag.TongTaiKhoan</span>
+                <span class="text-xs text-outline font-medium">người dùng</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Đang hoạt động</span>
+                <div class="w-9 h-9 rounded-xl bg-success-emerald/10 flex items-center justify-center text-success-emerald">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-success-emerald tracking-tight font-black font-mono">@ViewBag.DangHoatDong</span>
+                <span class="text-xs text-outline font-medium">tài khoản khả dụng</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Tài khoản bị khóa</span>
+                <div class="w-9 h-9 rounded-xl bg-danger-crimson/10 flex items-center justify-center text-danger-crimson">
+                    <span class="material-symbols-outlined text-[20px]">lock</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-danger-crimson tracking-tight font-black font-mono">@ViewBag.BiKhoa</span>
+                <span class="text-xs text-outline font-medium">bị tạm ngưng</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Operation Toolbar -->
+    <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+        <form method="get" action="/TaiKhoan/Index" class="flex flex-wrap items-center gap-3 w-full lg:w-auto" id="filter-form" onsubmit="event.preventDefault(); filterTaiKhoanAjax();">
+            <div class="relative flex-1 sm:w-80">
+                <span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
+                <input name="search" value="@search" class="w-full bg-surface-container-low border border-border-standard pl-9 pr-3 py-2 rounded-xl text-brand-deep font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Tìm theo tên đăng nhập, họ tên, email..." type="text"/>
+            </div>
+
+            <div class="relative">
+                <select name="vaiTro" onchange="filterTaiKhoanAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                    <option value="">Tất cả Vai trò</option>
+                    <!option value="Admin" @(selectedVaiTro == "Admin" ? "selected" : "")>Admin</!option>
+                    <!option value="Giáo vụ" @(selectedVaiTro == "Giáo vụ" ? "selected" : "")>Giáo vụ</!option>
+                    <!option value="Học viên" @(selectedVaiTro == "Học viên" ? "selected" : "")>Học viên</!option>
+                </select>
+                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+            </div>
+
+            <div class="relative">
+                <select name="trangThai" onchange="filterTaiKhoanAjax()" class="appearance-none bg-surface-white border border-border-standard text-brand-deep font-body-sm text-body-sm px-3.5 py-2 pr-8 rounded-xl focus:outline-none focus:border-primary cursor-pointer hover:bg-surface-container-low transition-colors">
+                    <option value="">Tất cả Trạng thái</option>
+                    <!option value="Đang hoạt động" @(selectedTrangThai == "Đang hoạt động" ? "selected" : "")>● Đang hoạt động</!option>
+                    <!option value="Bị khóa" @(selectedTrangThai == "Bị khóa" ? "selected" : "")>○ Bị khóa</!option>
+                </select>
+                <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+            </div>
+        </form>
+
+        <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
+            <a href="/TaiKhoan/Index" onclick="event.preventDefault(); loadTaiKhoanPage(this.href);" class="p-2 border border-border-standard rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors cursor-pointer" title="Làm mới">
+                <span class="material-symbols-outlined text-[20px] block">refresh</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Data Table Container -->
+    <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_1px_3px_rgba(0,22,86,0.04)] overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse" id="crud-table">
+                <thead>
+                    <tr class="bg-surface-container-low/70 border-b border-border-subtle font-label-sm text-label-sm text-outline tracking-wider uppercase">
+                        <th class="py-4 px-6">Người dùng</th>
+                        <th class="py-4 px-4">Tên đăng nhập</th>
+                        <th class="py-4 px-4">Email liên hệ</th>
+                        <th class="py-4 px-4 text-center">Vai trò</th>
+                        <th class="py-4 px-4 text-center">Trạng thái</th>
+                        <th class="py-4 px-6 text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-subtle font-body-sm text-body-sm">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-outline">
+                                <span class="material-symbols-outlined text-4xl block mb-2 text-outline/50">search_off</span>
+                                Không tìm thấy tài khoản nào phù hợp.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-surface-container-low/50 transition-colors"
+                                data-id="@item.MaTaiKhoan"
+                                data-username="@item.TenDangNhap"
+                                data-hoten="@item.HoTen"
+                                data-email="@item.Email"
+                                data-vaitro="@item.VaiTro"
+                                data-trangthai="@item.TrangThai">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                            @(!string.IsNullOrEmpty(item.HoTen) ? item.HoTen.Substring(0, 1).ToUpper() : "U")
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-brand-deep">@item.HoTen</div>
+                                            <div class="text-xs text-outline font-mono">ID: #@item.MaTaiKhoan</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 font-mono font-semibold text-brand-deep">
+                                    @item.TenDangNhap
+                                </td>
+                                <td class="py-4 px-4 text-outline font-mono text-xs">
+                                    @item.Email
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    @if (item.VaiTro == "Admin")
+                                    {
+                                        <span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full font-semibold border border-purple-200">
+                                            <span class="material-symbols-outlined text-[14px]">shield</span>Admin
+                                        </span>
+                                    }
+                                    else if (item.VaiTro == "Giáo vụ")
+                                    {
+                                        <span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-semibold border border-blue-200">
+                                            <span class="material-symbols-outlined text-[14px]">badge</span>Giáo vụ
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-semibold border border-emerald-200">
+                                            <span class="material-symbols-outlined text-[14px]">school</span>Học viên
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    @if (item.TrangThai == "Đang hoạt động")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-success-emerald bg-emerald-50 px-2.5 py-1 rounded-full font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span>Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 font-label-sm text-label-sm text-danger-crimson bg-red-50 px-2.5 py-1 rounded-full font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-danger-crimson"></span>Bị khóa
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="inline-flex items-center gap-1">
+                                        <button onclick="openEditDrawerFromRow(this)" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer" title="Chỉnh sửa">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </button>
+                                        <button onclick="toggleLockAccount(@item.MaTaiKhoan, '@item.TenDangNhap')" class="p-1.5 rounded-lg text-outline hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer" title="@(item.TrangThai == "Bị khóa" ? "Mở khóa" : "Khóa tài khoản")">
+                                            <span class="material-symbols-outlined text-[18px]">@(item.TrangThai == "Bị khóa" ? "lock_open" : "lock")</span>
+                                        </button>
+                                        <button onclick="confirmDeleteAccount(@item.MaTaiKhoan, '@item.TenDangNhap')" class="p-1.5 rounded-lg text-outline hover:text-danger-crimson hover:bg-red-50 transition-colors cursor-pointer" title="Xóa tài khoản">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Toolbar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-border-subtle font-body-sm text-body-sm text-outline">
+            <span class="tabular-nums">
+                Trang <strong class="text-brand-deep font-semibold">@currentPage</strong> / <strong class="text-brand-deep font-semibold">@totalPages</strong> (Tổng @totalItems người dùng)
+            </span>
+            <div class="inline-flex items-center gap-1">
+                @if (currentPage > 1)
+                {
+                    <a href="/TaiKhoan/Index?page=@(currentPage - 1)&search=@search&vaiTro=@selectedVaiTro&trangThai=@selectedTrangThai" onclick="event.preventDefault(); loadTaiKhoanPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
+                        Trước
+                    </a>
+                }
+                else
+                {
+                    <span class="px-2.5 py-1 rounded-lg border border-border-standard text-outline/40 font-label-md text-label-md cursor-not-allowed">Trước</span>
+                }
+
+                @for (int p = currentPage - 1; p <= currentPage + 1; p++)
+                {
+                    if (p >= 1 && p <= totalPages)
+                    {
+                        if (p == currentPage)
+                        {
+                            <span class="w-8 h-8 rounded-lg bg-primary-container text-surface-white font-label-md text-label-md font-bold flex items-center justify-center font-mono">@p</span>
+                        }
+                        else
+                        {
+                            <a href="/TaiKhoan/Index?page=@p&search=@search&vaiTro=@selectedVaiTro&trangThai=@selectedTrangThai" onclick="event.preventDefault(); loadTaiKhoanPage(this.href)" class="w-8 h-8 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md flex items-center justify-center font-mono cursor-pointer">@p</a>
+                        }
+                    }
+                }
+
+                @if (currentPage < totalPages)
+                {
+                    <a href="/TaiKhoan/Index?page=@(currentPage + 1)&search=@search&vaiTro=@selectedVaiTro&trangThai=@selectedTrangThai" onclick="event.preventDefault(); loadTaiKhoanPage(this.href)" class="px-2.5 py-1 rounded-lg border border-border-standard text-brand-deep hover:bg-canvas-base transition-colors font-label-md text-label-md cursor-pointer">
+                        Sau
+                    </a>
+                }
+                else
+                {
+                    <span class="px-2.5 py-1 rounded-lg border border-border-standard text-outline/40 font-label-md text-label-md cursor-not-allowed">Sau</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Right Slide-Over Drawer for Create & Edit Account -->
+<div id="drawer-container" class="fixed inset-0 z-50 overflow-hidden hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-brand-deep/30 backdrop-blur-xs transition-opacity" onclick="closeDrawer()"></div>
+    <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+        <div class="w-screen max-w-md bg-surface-white shadow-2xl flex flex-col justify-between">
+            <!-- Header -->
+            <div class="p-6 border-b border-border-subtle flex items-start justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[22px]">manage_accounts</span>
+                        <h2 class="font-headline-sm text-headline-sm text-brand-deep font-bold" id="drawer-title">Thêm tài khoản</h2>
+                    </div>
+                    <p class="font-body-sm text-body-sm text-outline mt-1" id="drawer-subtitle">Tạo người dùng mới và phân quyền trong hệ thống.</p>
+                </div>
+                <button onclick="closeDrawer()" class="p-1.5 rounded-xl text-outline hover:text-brand-deep hover:bg-surface-container-low transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <form id="drawer-form" method="post" action="/TaiKhoan/CreatePost" class="flex-1 overflow-y-auto p-6 space-y-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maTaiKhoan" id="drawer-mataikhoan" value="0"/>
+
+                <div class="space-y-1.5">
+                    <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider">Tên đăng nhập <span class="text-danger-crimson">*</span></label>
+                    <input type="text" name="TenDangNhap" id="drawer-username" required class="w-full bg-surface-white border border-border-standard rounded-xl px-3.5 py-2.5 font-body-sm text-body-sm text-brand-deep focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Ví dụ: giaovu_nam"/>
+                </div>
+
+                <div class="space-y-1.5" id="drawer-password-group">
+                    <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider" id="drawer-password-label">Mật khẩu <span class="text-danger-crimson">*</span></label>
+                    <input type="password" name="MatKhau" id="drawer-password" class="w-full bg-surface-white border border-border-standard rounded-xl px-3.5 py-2.5 font-body-sm text-body-sm text-brand-deep focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Nhập mật khẩu..."/>
+                    <span class="text-[11px] text-outline hidden" id="drawer-password-hint">Để trống nếu không muốn đổi mật khẩu.</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider">Họ và tên <span class="text-danger-crimson">*</span></label>
+                    <input type="text" name="HoTen" id="drawer-hoten" required class="w-full bg-surface-white border border-border-standard rounded-xl px-3.5 py-2.5 font-body-sm text-body-sm text-brand-deep focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Ví dụ: Nguyễn Văn An"/>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider">Email liên hệ <span class="text-danger-crimson">*</span></label>
+                    <input type="email" name="Email" id="drawer-email" required class="w-full bg-surface-white border border-border-standard rounded-xl px-3.5 py-2.5 font-body-sm text-body-sm text-brand-deep focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="name@uneti.edu.vn"/>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider">Vai trò</label>
+                        <select name="VaiTro" id="drawer-vaitro" class="w-full bg-surface-white border border-border-standard rounded-xl px-3.5 py-2.5 font-body-sm text-body-sm text-brand-deep focus:outline-none focus:border-primary cursor-pointer">
+                            <option value="Học viên">Học viên</option>
+                            <option value="Giáo vụ">Giáo vụ</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block font-label-sm text-label-sm text-brand-deep uppercase tracking-wider">Trạng thái</label>
+                        <select name="TrangThai" id="drawer-trangthai" class="w-full bg-surface-white border border-border-standard rounded-xl px-3.5 py-2.5 font-body-sm text-body-sm text-brand-deep focus:outline-none focus:border-primary cursor-pointer">
+                            <option value="Đang hoạt động">Đang hoạt động</option>
+                            <option value="Bị khóa">Bị khóa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Footer Buttons inside Form -->
+                <div class="border-t border-border-subtle pt-5 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeDrawer()" class="border border-border-standard bg-surface-white hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-4 py-2.5 rounded-xl transition-colors cursor-pointer">
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" class="bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-[18px]">save</span>
+                        <span id="drawer-submit-text">Lưu tài khoản</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const drawer = document.getElementById('drawer-container');
+    const drawerForm = document.getElementById('drawer-form');
+
+    function openDrawer(mode) {
+        drawer.classList.remove('hidden');
+        if (mode === 'create') {
+            document.getElementById('drawer-title').innerText = 'Thêm tài khoản';
+            document.getElementById('drawer-subtitle').innerText = 'Tạo người dùng mới và phân quyền trong hệ thống.';
+            document.getElementById('drawer-submit-text').innerText = 'Lưu tài khoản';
+            drawerForm.action = '/TaiKhoan/CreatePost';
+
+            document.getElementById('drawer-mataikhoan').value = '0';
+            document.getElementById('drawer-username').value = '';
+            document.getElementById('drawer-username').readOnly = false;
+            document.getElementById('drawer-password').value = '';
+            document.getElementById('drawer-password').required = true;
+            document.getElementById('drawer-password-label').innerHTML = 'Mật khẩu <span class="text-danger-crimson">*</span>';
+            document.getElementById('drawer-password-hint').classList.add('hidden');
+            document.getElementById('drawer-hoten').value = '';
+            document.getElementById('drawer-email').value = '';
+            document.getElementById('drawer-vaitro').value = 'Học viên';
+            document.getElementById('drawer-trangthai').value = 'Đang hoạt động';
+        }
+    }
+
+    function closeDrawer() {
+        drawer.classList.add('hidden');
+    }
+
+    function openEditDrawerFromRow(btn) {
+        const row = btn.closest('tr');
+        document.getElementById('drawer-title').innerText = 'Chỉnh sửa tài khoản';
+        document.getElementById('drawer-subtitle').innerText = 'Cập nhật quyền hạn và thông tin người dùng.';
+        document.getElementById('drawer-submit-text').innerText = 'Cập nhật';
+        drawerForm.action = '/TaiKhoan/EditPost';
+
+        document.getElementById('drawer-mataikhoan').value = row.dataset.id;
+        document.getElementById('drawer-username').value = row.dataset.username;
+        document.getElementById('drawer-username').readOnly = true;
+
+        document.getElementById('drawer-password').value = '';
+        document.getElementById('drawer-password').required = false;
+        document.getElementById('drawer-password').name = 'matKhauMoi';
+        document.getElementById('drawer-password-label').innerText = 'Mật khẩu mới (Nếu đổi)';
+        document.getElementById('drawer-password-hint').classList.remove('hidden');
+
+        document.getElementById('drawer-hoten').value = row.dataset.hoten;
+        document.getElementById('drawer-email').value = row.dataset.email;
+        document.getElementById('drawer-vaitro').value = row.dataset.vaitro;
+        document.getElementById('drawer-trangthai').value = row.dataset.trangthai;
+
+        drawer.classList.remove('hidden');
+    }
+
+    async function toggleLockAccount(id, username) {
+        try {
+            const res = await fetch(`/TaiKhoan/ToggleLock/${id}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.showToast) window.showToast(data.message, 'success');
+                await loadTaiKhoanPage(window.location.href, false);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function confirmDeleteAccount(id, username) {
+        openGlobalDeleteModal({
+            action: '/TaiKhoan/DeletePost',
+            id: id,
+            title: 'Xóa tài khoản này?',
+            itemName: username,
+            message: `Bạn có chắc chắn muốn xóa tài khoản <strong class="text-brand-deep">${username}</strong> khỏi hệ thống?`,
+            warning: 'Thao tác này không thể hoàn tác.',
+            submitText: 'Xóa tài khoản'
+        });
+    }
+
+    function filterTaiKhoanAjax() {
+        const form = document.getElementById('filter-form');
+        if (!form) return;
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        params.set('page', '1');
+        loadTaiKhoanPage(`/TaiKhoan/Index?${params.toString()}`);
+    }
+
+    async function loadTaiKhoanPage(url, pushState = true) {
+        const area = document.getElementById('taikhoan-content-area');
+        if (area) area.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newContent = doc.getElementById('taikhoan-content-area');
+            if (newContent && area) {
+                area.innerHTML = newContent.innerHTML;
+            }
+            if (pushState) window.history.pushState({ url }, '', url);
+        } catch (err) {
+            window.location.href = url;
+        } finally {
+            if (area) area.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    window.addEventListener('popstate', (e) => {
+        loadTaiKhoanPage(e.state?.url || window.location.href, false);
+    });
+
+    window.onDeleteSuccess = function() {
+        loadTaiKhoanPage(window.location.href, false);
+    };
+
+    if (drawerForm) {
+        drawerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = drawerForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(drawerForm);
+                const res = await fetch(drawerForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeDrawer();
+                    if (window.showToast) window.showToast(data.message, 'success');
+                    await loadTaiKhoanPage(window.location.href, false);
+                } else {
+                    if (window.showToast) window.showToast(data.message, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+</script>
+}

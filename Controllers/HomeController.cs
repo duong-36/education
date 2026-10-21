@@ -8,7 +8,12 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        return View();
+        var vaiTro = HttpContext.Session.GetString("VaiTro");
+        if (vaiTro == "Học viên")
+        {
+            return RedirectToAction("DangKy", "CongHocVien");
+        }
+        return RedirectToAction("Dashboard", "ThongKe");
     }
 
     public IActionResult Privacy()

@@ -1,0 +1,546 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc>
+@{
+    // Họ và tên: [Tên SV4]
+    // Mã sinh viên: [Mã SV4]
+    // Nội dung thực hiện: Xét duyệt đăng ký & Quản lý Học phí (Module 4) - Phong cách Prep.vn
+    ViewData["Title"] = "Xét duyệt & Thu học phí";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+    string search = ViewBag.Search ?? "";
+    int? selectedMaLop = ViewBag.SelectedMaLop;
+    string selectedTrangThai = ViewBag.SelectedTrangThai ?? "";
+    string tuNgay = ViewBag.TuNgay ?? "";
+    string denNgay = ViewBag.DenNgay ?? "";
+    var lopHocList = ViewBag.LopHocList as IEnumerable<dynamic> ?? new List<dynamic>();
+}
+
+<div id="dangky-content-area" class="flex flex-col gap-y-6 transition-opacity duration-200">
+    <!-- Sub-header Navigation Bar -->
+    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-standard">
+        <div>
+            <div class="flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase tracking-wider mb-1">
+                <span>QUẢN LÝ ĐÀO TẠO</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-brand-deep font-semibold">XÉT DUYỆT & THU HỌC PHÍ</span>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-brand-deep font-bold tracking-tight">
+                Tiếp Nhận & Xử Lý Đơn Đăng Ký
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <button onclick="exportTableToCSV('danh-sach-dang-ky.csv')" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-[18px] text-primary">file_download</span>
+                <span class="hidden sm:inline">Xuất Excel</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- 3 Stat Cards (Top KPI) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Hồ sơ chờ xét duyệt</span>
+                <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                    <span class="material-symbols-outlined text-[20px]">pending_actions</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-amber-700 tracking-tight font-black font-mono">@ViewBag.ChoDuyetCount</span>
+                <span class="text-xs text-amber-600 font-medium">cần xử lý</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Đã phê duyệt nhập học</span>
+                <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                    <span class="material-symbols-outlined text-[20px]">how_to_reg</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-blue-700 tracking-tight font-black font-mono">@ViewBag.DaDuyetCount</span>
+                <span class="text-xs text-blue-600 font-medium font-mono">học viên đủ điều kiện</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Tổng học phí đã thu</span>
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <span class="material-symbols-outlined text-[20px]">payments</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[26px] leading-8 text-emerald-700 tracking-tight font-black font-mono">
+                    @(((double)ViewBag.TongDoanhThu).ToString("N0")) đ
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+            <!-- Search Input -->
+            <div class="relative flex-1 min-w-[220px]">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">search</span>
+                <input type="text" id="searchInput" value="@search" placeholder="Tìm kiếm theo học viên, email, SĐT, lớp..." 
+                       class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep placeholder:text-outline/60" />
+            </div>
+
+            <!-- Filter Lớp học -->
+            <div class="min-w-[170px]">
+                <select id="filterMaLop" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
+                    <option value="">Tất cả lớp học</option>
+                    @foreach (var lop in lopHocList)
+                    {
+                        <!option value="@lop.MaLop" @(selectedMaLop == lop.MaLop ? "selected" : "")>@lop.TenLop</!option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filter Trạng thái duyệt -->
+            <div class="min-w-[150px]">
+                <select id="filterTrangThai" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
+                    <option value="">Tất cả trạng thái</option>
+                    <!option value="Chờ duyệt" @(selectedTrangThai == "Chờ duyệt" ? "selected" : "")>Chờ duyệt</!option>
+                    <!option value="Đã duyệt" @(selectedTrangThai == "Đã duyệt" ? "selected" : "")>Đã duyệt</!option>
+                    <!option value="Đã đóng học phí" @(selectedTrangThai == "Đã đóng học phí" ? "selected" : "")>Đã đóng học phí</!option>
+                    <!option value="Đang học" @(selectedTrangThai == "Đang học" ? "selected" : "")>Đang học</!option>
+                    <!option value="Hoàn thành" @(selectedTrangThai == "Hoàn thành" ? "selected" : "")>Hoàn thành</!option>
+                    <!option value="Từ chối" @(selectedTrangThai == "Từ chối" ? "selected" : "")>Từ chối</!option>
+                    <!option value="Đã hủy" @(selectedTrangThai == "Đã hủy" ? "selected" : "")>Đã hủy</!option>
+                </select>
+            </div>
+
+            <!-- Date Range Filters -->
+            <div class="flex items-center gap-1.5 text-xs text-outline">
+                <span>Từ:</span>
+                <input type="date" id="filterTuNgay" value="@tuNgay" class="px-2 py-1.5 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white font-mono" />
+                <span>Đến:</span>
+                <input type="date" id="filterDenNgay" value="@denNgay" class="px-2 py-1.5 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white font-mono" />
+            </div>
+        </div>
+
+        <button type="button" onclick="resetFilters()" class="text-xs text-outline hover:text-primary font-medium flex items-center gap-1 px-3 py-2 rounded-xl hover:bg-surface-container-low transition-colors">
+            <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+            <span>Đặt lại</span>
+        </button>
+    </div>
+
+    <!-- Table Section (SPA Ajax Replace Target) -->
+    <div id="table-wrapper">
+        @await Html.PartialAsync("_DangKyHocTablePartial", Model)
+    </div>
+</div>
+
+<!-- ================= MODAL PHÊ DUYỆT ĐĂNG KÝ ================= -->
+<div id="duyet-modal" class="fixed inset-0 bg-brand-deep/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div class="bg-surface-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="duyet-modal-content">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[24px]">verified</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-brand-deep">Phê Duyệt Đơn Đăng Ký</h3>
+                <p class="text-xs text-outline" id="duyet-subtitle">Xác nhận hồ sơ đạt điều kiện</p>
+            </div>
+        </div>
+
+        <form id="duyetForm" onsubmit="submitDuyet(event)" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="duyet-MaDangKy" name="id" value="" />
+
+            <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-border-subtle text-xs space-y-1">
+                <div>Học viên: <strong class="text-brand-deep" id="duyet-tenHV">—</strong></div>
+                <div>Lớp đăng ký: <strong class="text-brand-deep" id="duyet-tenLop">—</strong></div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Nhận xét giáo vụ</label>
+                <input type="text" id="duyet-NhanXet" name="nhanXet" value="Đã duyệt hồ sơ đủ điều kiện nhập học."
+                       class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white text-brand-deep" />
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeDuyetModal()" class="px-4 py-2 text-xs font-semibold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-surface-container-high transition-colors">
+                    Hủy
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-semibold text-surface-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px]">check</span>
+                    <span>Xác nhận duyệt</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODAL TỪ CHỐI ĐĂNG KÝ ================= -->
+<div id="tuchoi-modal" class="fixed inset-0 bg-brand-deep/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div class="bg-surface-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="tuchoi-modal-content">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[24px]">cancel</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-brand-deep">Từ Chối Đơn Đăng Ký</h3>
+                <p class="text-xs text-outline" id="tuchoi-subtitle">Nhập lý do từ chối tiếp nhận</p>
+            </div>
+        </div>
+
+        <form id="tuchoiForm" onsubmit="submitTuChoi(event)" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="tuchoi-MaDangKy" name="id" value="" />
+
+            <div>
+                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Lý do từ chối <span class="text-rose-500">*</span></label>
+                <textarea id="tuchoi-LyDo" name="lyDo" rows="3" required placeholder="Ví dụ: Hồ sơ chưa đạt điều kiện trình độ đầu vào hoặc lớp đã hết chỗ..."
+                          class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white text-brand-deep"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeTuChoiModal()" class="px-4 py-2 text-xs font-semibold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-surface-container-high transition-colors">
+                    Hủy
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-semibold text-surface-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                    <span>Xác nhận từ chối</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODAL GHI NHẬN HỌC PHÍ ================= -->
+<div id="thuphi-modal" class="fixed inset-0 bg-brand-deep/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div class="bg-surface-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="thuphi-modal-content">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[24px]">payments</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-brand-deep">Ghi Nhận Thu Học Phí</h3>
+                <p class="text-xs text-outline" id="thuphi-subtitle">Cập nhật số tiền học viên đã nộp</p>
+            </div>
+        </div>
+
+        <form id="thuphiForm" onsubmit="submitThuPhi(event)" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="thuphi-MaDangKy" name="id" value="" />
+
+            <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-border-subtle text-xs space-y-1.5">
+                <div class="flex justify-between">
+                    <span class="text-outline">Học viên:</span>
+                    <strong class="text-brand-deep" id="thuphi-tenHV">—</strong>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-outline">Khóa học:</span>
+                    <strong class="text-brand-deep" id="thuphi-tenLop">—</strong>
+                </div>
+                <div class="flex justify-between border-t border-border-standard pt-1.5">
+                    <span class="text-outline">Học phí gốc của lớp:</span>
+                    <strong class="text-emerald-700 font-mono font-bold" id="thuphi-hocPhiGoc">0 đ</strong>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-outline">Đã nộp trước đó:</span>
+                    <span class="text-brand-deep font-mono font-medium" id="thuphi-daDong">0 đ</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-bold text-brand-deep uppercase">Số tiền đóng lần này (VNĐ) <span class="text-rose-500">*</span></label>
+                    <button type="button" onclick="fillFullTuition()" class="text-[11px] font-semibold text-primary hover:underline">
+                        Nộp đủ 100%
+                    </button>
+                </div>
+                <input type="number" id="thuphi-SoTien" name="soTien" required min="1000" step="1000"
+                       class="w-full px-3.5 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white font-mono font-bold text-brand-deep" />
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Ghi chú phiếu thu (tùy chọn)</label>
+                <input type="text" id="thuphi-GhiChu" name="ghiChu" placeholder="Ví dụ: Chuyển khoản ngân hàng Vietcombank..."
+                       class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white text-brand-deep" />
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeThuPhiModal()" class="px-4 py-2 text-xs font-semibold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-surface-container-high transition-colors">
+                    Hủy
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-semibold text-surface-white bg-primary hover:bg-[#0047b3] rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                    <span>Xác nhận thu tiền</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentPage = @currentPage;
+    let searchDebounceTimer = null;
+    let currentHocPhiGoc = 0;
+
+    // Filter Listeners
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => { currentPage = 1; loadTableData(); }, 350);
+    });
+
+    document.getElementById('filterMaLop').addEventListener('change', () => { currentPage = 1; loadTableData(); });
+    document.getElementById('filterTrangThai').addEventListener('change', () => { currentPage = 1; loadTableData(); });
+    document.getElementById('filterTuNgay').addEventListener('change', () => { currentPage = 1; loadTableData(); });
+    document.getElementById('filterDenNgay').addEventListener('change', () => { currentPage = 1; loadTableData(); });
+
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterMaLop').value = '';
+        document.getElementById('filterTrangThai').value = '';
+        document.getElementById('filterTuNgay').value = '';
+        document.getElementById('filterDenNgay').value = '';
+        currentPage = 1;
+        loadTableData();
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        loadTableData();
+    }
+
+    function loadTableData() {
+        const search = document.getElementById('searchInput').value.trim();
+        const maLop = document.getElementById('filterMaLop').value;
+        const trangThai = document.getElementById('filterTrangThai').value;
+        const tuNgay = document.getElementById('filterTuNgay').value;
+        const denNgay = document.getElementById('filterDenNgay').value;
+
+        const params = new URLSearchParams({
+            search: search,
+            maLop: maLop,
+            trangThai: trangThai,
+            tuNgay: tuNgay,
+            denNgay: denNgay,
+            page: currentPage
+        });
+
+        const wrapper = document.getElementById('table-wrapper');
+        wrapper.classList.add('opacity-50');
+
+        fetch(`/DangKyHoc/Index?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.text())
+        .then(html => {
+            wrapper.innerHTML = html;
+            wrapper.classList.remove('opacity-50');
+        })
+        .catch(err => {
+            console.error(err);
+            wrapper.classList.remove('opacity-50');
+            if (window.showToast) window.showToast('Lỗi tải dữ liệu!', 'error');
+        });
+    }
+
+    // Modal Duyệt
+    function openDuyetModal(id, tenHV, tenLop) {
+        document.getElementById('duyet-MaDangKy').value = id;
+        document.getElementById('duyet-tenHV').innerText = tenHV;
+        document.getElementById('duyet-tenLop').innerText = tenLop;
+
+        const modal = document.getElementById('duyet-modal');
+        const content = document.getElementById('duyet-modal-content');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeDuyetModal() {
+        const modal = document.getElementById('duyet-modal');
+        const content = document.getElementById('duyet-modal-content');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+
+    function submitDuyet(e) {
+        e.preventDefault();
+        const formData = new FormData(document.getElementById('duyetForm'));
+
+        fetch('/DangKyHoc/DuyetDangKyPost', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                closeDuyetModal();
+                if (window.showToast) window.showToast(res.message, 'success');
+                loadTableData();
+            } else {
+                if (window.showToast) window.showToast(res.message, 'error');
+            }
+        });
+    }
+
+    // Modal Từ Chối
+    function openTuChoiModal(id, tenHV) {
+        document.getElementById('tuchoi-MaDangKy').value = id;
+        document.getElementById('tuchoi-subtitle').innerText = `Từ chối đăng ký của học viên ${tenHV}`;
+        document.getElementById('tuchoi-LyDo').value = '';
+
+        const modal = document.getElementById('tuchoi-modal');
+        const content = document.getElementById('tuchoi-modal-content');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeTuChoiModal() {
+        const modal = document.getElementById('tuchoi-modal');
+        const content = document.getElementById('tuchoi-modal-content');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+
+    function submitTuChoi(e) {
+        e.preventDefault();
+        const formData = new FormData(document.getElementById('tuchoiForm'));
+
+        fetch('/DangKyHoc/TuChoiDangKyPost', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                closeTuChoiModal();
+                if (window.showToast) window.showToast(res.message, 'success');
+                loadTableData();
+            } else {
+                if (window.showToast) window.showToast(res.message, 'error');
+            }
+        });
+    }
+
+    // Modal Thu Học Phí
+    function openThuPhiModal(id) {
+        fetch(`/DangKyHoc/GetDangKy?id=${id}`)
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    const d = res.data;
+                    document.getElementById('thuphi-MaDangKy').value = d.maDangKy;
+                    document.getElementById('thuphi-tenHV').innerText = d.tenHocVien;
+                    document.getElementById('thuphi-tenLop').innerText = d.tenLop;
+                    document.getElementById('thuphi-hocPhiGoc').innerText = d.hocPhi.toLocaleString() + ' đ';
+                    document.getElementById('thuphi-daDong').innerText = d.soTienDaDong.toLocaleString() + ' đ';
+                    
+                    currentHocPhiGoc = d.hocPhi;
+                    document.getElementById('thuphi-SoTien').value = d.hocPhi; // default fill full tuition
+                    document.getElementById('thuphi-GhiChu').value = '';
+
+                    const modal = document.getElementById('thuphi-modal');
+                    const content = document.getElementById('thuphi-modal-content');
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    content.classList.remove('scale-95');
+                    content.classList.add('scale-100');
+                } else {
+                    if (window.showToast) window.showToast(res.message, 'error');
+                }
+            });
+    }
+
+    function fillFullTuition() {
+        document.getElementById('thuphi-SoTien').value = currentHocPhiGoc;
+    }
+
+    function closeThuPhiModal() {
+        const modal = document.getElementById('thuphi-modal');
+        const content = document.getElementById('thuphi-modal-content');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+
+    function submitThuPhi(e) {
+        e.preventDefault();
+        const formData = new FormData(document.getElementById('thuphiForm'));
+
+        fetch('/DangKyHoc/ThuHocPhiPost', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                closeThuPhiModal();
+                if (window.showToast) window.showToast(res.message, 'success');
+                loadTableData();
+            } else {
+                if (window.showToast) window.showToast(res.message, 'error');
+            }
+        });
+    }
+
+    // Bắt đầu học
+    function batDauHoc(id) {
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+        fetch('/DangKyHoc/BatDauHocPost', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                if (window.showToast) window.showToast(res.message, 'success');
+                loadTableData();
+            }
+        });
+    }
+
+    // Xóa đơn đăng ký
+    function confirmDelete(id, name) {
+        if (typeof openGlobalDeleteModal === 'function') {
+            openGlobalDeleteModal({
+                title: 'Xóa đơn đăng ký',
+                message: `Bạn có chắc muốn xóa đơn đăng ký #${id} của học viên "${name}"? Thao tác này không thể hoàn tác nếu học viên đã đóng học phí.`,
+                confirmUrl: '/DangKyHoc/DeletePost',
+                itemId: id,
+                onSuccess: function() { loadTableData(); }
+            });
+        }
+    }
+
+    // CSV Export
+    function exportTableToCSV(filename) {
+        const rows = document.querySelectorAll("#dangky-table tr");
+        let csv = [];
+        for (let i = 0; i < rows.length; i++) {
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length - 1; j++) {
+                row.push('"' + cols[j].innerText.replace(/"/g, '""').trim() + '"');
+            }
+            csv.push(row.join(","));
+        }
+        const csvFile = new Blob(["\uFEFF" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+</script>
+}

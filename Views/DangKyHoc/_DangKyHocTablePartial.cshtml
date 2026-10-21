@@ -1,0 +1,200 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc>
+@{
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int pageSize = ViewBag.PageSize ?? 10;
+}
+
+<!-- Table Container -->
+<div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="dangky-table">
+            <thead>
+                <tr class="bg-surface-container-lowest border-b border-border-standard text-[11px] font-bold text-outline uppercase tracking-wider">
+                    <th class="py-3.5 px-4 w-12 text-center">#</th>
+                    <th class="py-3.5 px-4">Mã ĐK</th>
+                    <th class="py-3.5 px-4">Học Viên</th>
+                    <th class="py-3.5 px-4">Lớp Học Phần</th>
+                    <th class="py-3.5 px-4">Thời Gian</th>
+                    <th class="py-3.5 px-4">Học Phí & Đã Thu</th>
+                    <th class="py-3.5 px-4 text-center">Trạng Thái</th>
+                    <th class="py-3.5 px-4 text-right">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-border-subtle text-xs text-brand-deep">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-12 text-outline">
+                            <span class="material-symbols-outlined text-[40px] mb-2 opacity-40">assignment_late</span>
+                            <p class="font-medium">Không tìm thấy đơn đăng ký nào theo tiêu chí lọc.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int idx = (currentPage - 1) * pageSize + 1;
+                    foreach (var item in Model)
+                    {
+                        double hocPhiLop = item.LopHoc?.HocPhi ?? 0;
+                        double daDong = item.SoTienDaDong;
+                        double percent = hocPhiLop > 0 ? Math.Min(100.0, Math.Round(daDong / hocPhiLop * 100, 1)) : 0;
+
+                        <tr class="hover:bg-surface-container-lowest/60 transition-colors">
+                            <td class="py-3.5 px-4 text-center text-outline font-mono text-[11px]">@(idx++)</td>
+                            <td class="py-3.5 px-4 font-mono font-semibold text-primary">
+                                #DK@item.MaDangKy.ToString("D3")
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0">
+                                        @(string.IsNullOrWhiteSpace(item.HocVien?.HoTen) ? "HV" : item.HocVien.HoTen.Substring(0, 1).ToUpper())
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-brand-deep block">@(item.HocVien?.HoTen ?? $"HV #{item.MaHocVien}")</span>
+                                        <div class="text-[11px] text-outline font-mono flex items-center gap-2">
+                                            <span>@(item.HocVien?.Email ?? "")</span>
+                                            @if (!string.IsNullOrEmpty(item.HocVien?.SoDienThoai))
+                                            {
+                                                <span>•</span>
+                                                <span>@item.HocVien.SoDienThoai</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-brand-deep">
+                                    @(item.LopHoc?.TenLop ?? $"Lớp #{item.MaLop}")
+                                </div>
+                                <div class="text-[11px] text-outline">
+                                    @(item.LopHoc?.ChuongTrinhDaoTao?.TenChuongTrinh ?? "Đào tạo nghiệp vụ")
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4 font-mono text-xs">
+                                <div><span class="text-outline text-[11px]">ĐK:</span> @item.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (item.NgayXuLy.HasValue)
+                                {
+                                    <div class="text-outline text-[11px]">
+                                        <span>Duyệt:</span> @item.NgayXuLy.Value.ToString("dd/MM/yyyy")
+                                    </div>
+                                }
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex items-center justify-between font-mono text-xs mb-1">
+                                    <span class="font-bold @(daDong >= hocPhiLop ? "text-emerald-700" : daDong > 0 ? "text-amber-700" : "text-outline")">
+                                        @daDong.ToString("N0") đ
+                                    </span>
+                                    <span class="text-outline text-[11px]">/ @hocPhiLop.ToString("N0") đ</span>
+                                </div>
+                                <div class="w-28 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="h-1.5 rounded-full @(percent >= 100 ? "bg-emerald-500" : percent > 0 ? "bg-amber-500" : "bg-slate-300")"
+                                         style="width: @percent%"></div>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                                    @(item.TrangThai == "Đã duyệt" || item.TrangThai == "Đang học" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                                      item.TrangThai == "Đã đóng học phí" || item.TrangThai == "Hoàn thành" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                                      item.TrangThai == "Chờ duyệt" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                                      "bg-rose-50 text-rose-700 border border-rose-200")">
+                                    <span class="w-1.5 h-1.5 rounded-full mr-1.5 @(item.TrangThai == "Chờ duyệt" ? "bg-amber-500 animate-pulse" : "bg-current")"></span>
+                                    @item.TrangThai
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <div class="inline-flex items-center gap-1.5">
+                                    @if (item.TrangThai == "Chờ duyệt")
+                                    {
+                                        <!-- Duyệt nhanh -->
+                                        <button type="button" onclick="openDuyetModal(@item.MaDangKy, '@(item.HocVien?.HoTen?.Replace("'", "\\'") ?? "")', '@(item.LopHoc?.TenLop?.Replace("'", "\\'") ?? "")')"
+                                                title="Phê duyệt hồ sơ" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg font-semibold text-[11px] flex items-center gap-1 transition-colors">
+                                            <span class="material-symbols-outlined text-[15px]">check</span>
+                                            <span>Duyệt</span>
+                                        </button>
+                                        <!-- Từ chối -->
+                                        <button type="button" onclick="openTuChoiModal(@item.MaDangKy, '@(item.HocVien?.HoTen?.Replace("'", "\\'") ?? "")')"
+                                                title="Từ chối hồ sơ" class="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg font-semibold text-[11px] transition-colors">
+                                            <span class="material-symbols-outlined text-[15px]">close</span>
+                                        </button>
+                                    }
+                                    else if (item.TrangThai == "Đã duyệt" || item.TrangThai == "Đã đóng học phí")
+                                    {
+                                        <!-- Thu học phí -->
+                                        <button type="button" onclick="openThuPhiModal(@item.MaDangKy)"
+                                                title="Ghi nhận học phí" class="px-2.5 py-1 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 rounded-lg font-semibold text-[11px] flex items-center gap-1 transition-colors">
+                                            <span class="material-symbols-outlined text-[15px]">payments</span>
+                                            <span>Thu phí</span>
+                                        </button>
+
+                                        @if (item.TrangThai == "Đã đóng học phí")
+                                        {
+                                            <button type="button" onclick="batDauHoc(@item.MaDangKy)"
+                                                    title="Chuyển sang Đang học" class="px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg font-semibold text-[11px] transition-colors">
+                                                <span class="material-symbols-outlined text-[15px]">play_arrow</span>
+                                            </button>
+                                        }
+                                    }
+
+                                    <!-- Nút Xóa hồ sơ -->
+                                    <button type="button" onclick="confirmDelete(@item.MaDangKy, '@(item.HocVien?.HoTen?.Replace("'", "\\'") ?? "")')"
+                                            title="Xóa hồ sơ" class="p-1.5 rounded-lg text-outline hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                                        <span class="material-symbols-outlined text-[17px]">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination & Summary -->
+    <div class="px-5 py-4 border-t border-border-standard flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-outline">
+        <div>
+            Hiển thị <span class="font-bold text-brand-deep">@Model.Count()</span> trên tổng số <span class="font-bold text-brand-deep">@totalItems</span> đơn đăng ký
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="flex items-center gap-1">
+                <!-- Nút Đầu -->
+                <button type="button" onclick="changePage(1)" @(currentPage == 1 ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">first_page</span>
+                </button>
+                <!-- Nút Trước -->
+                <button type="button" onclick="changePage(@(currentPage - 1))" @(currentPage == 1 ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                </button>
+
+                <!-- Số trang (trước, hiện tại, sau) -->
+                @{
+                    int startP = Math.Max(1, currentPage - 1);
+                    int endP = Math.Min(totalPages, currentPage + 1);
+                    for (int p = startP; p <= endP; p++)
+                    {
+                        if (p == currentPage)
+                        {
+                            <span class="w-8 h-8 rounded-lg bg-primary text-surface-white font-bold flex items-center justify-center font-mono">@p</span>
+                        }
+                        else
+                        {
+                            <button type="button" onclick="changePage(@p)" class="w-8 h-8 rounded-lg border border-border-standard hover:bg-surface-container-low text-brand-deep font-mono">@p</button>
+                        }
+                    }
+                }
+
+                <!-- Nút Sau -->
+                <button type="button" onclick="changePage(@(currentPage + 1))" @(currentPage == totalPages ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+                <!-- Nút Cuối -->
+                <button type="button" onclick="changePage(@totalPages)" @(currentPage == totalPages ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">last_page</span>
+                </button>
+            </div>
+        }
+    </div>
+</div>

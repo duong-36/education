@@ -1,0 +1,307 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc>
+@{
+    // Họ và tên: [Tên SV3]
+    // Mã sinh viên: [Mã SV3]
+    // Nội dung thực hiện: Cổng Học viên - Tiến trình học tập & Lịch học (Module 3) - Phong cách Prep.vn
+    ViewData["Title"] = "Tiến Trình Học Tập Cá Nhân";
+    var currentStudent = ViewBag.CurrentStudent as QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.HocVien;
+    var buoiHocs = ViewBag.BuoiHocs as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc>();
+    var ketQuas = ViewBag.KetQuas as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.KetQuaHocTap> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.KetQuaHocTap>();
+}
+
+<div class="flex flex-col gap-y-6">
+    <!-- Sub-header Navigation Bar -->
+    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-standard">
+        <div>
+            <div class="flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase tracking-wider mb-1">
+                <span>CỔNG HỌC VIÊN</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-brand-deep font-semibold">TIẾN TRÌNH & KẾT QUẢ</span>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-brand-deep font-bold tracking-tight">
+                Không Gian Học Tập Của Tôi
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <a asp-action="DangKy" class="inline-flex items-center gap-1.5 bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all">
+                <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                <span>Đăng ký lớp mới</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- 3 Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Khóa học đã đăng ký</span>
+                <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[20px]">school</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-brand-deep tracking-tight font-black font-mono">@Model.Count()</span>
+                <span class="text-xs text-outline font-medium">lớp học phần</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Buổi học sắp tới</span>
+                <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                    <span class="material-symbols-outlined text-[20px]">event</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-amber-700 tracking-tight font-black font-mono">
+                    @buoiHocs.Count(b => b.ThoiGianBatDau >= DateTime.Now)
+                </span>
+                <span class="text-xs text-amber-600 font-medium font-mono">buổi học lên lịch</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-white rounded-2xl p-5 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-outline font-label-md text-label-md">Khóa học hoàn thành</span>
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <span class="material-symbols-outlined text-[20px]">verified</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="font-display text-[30px] leading-8 text-emerald-700 tracking-tight font-black font-mono">
+                    @ketQuas.Count(k => k.KetQua == "Đạt")
+                </span>
+                <span class="text-xs text-emerald-600 font-medium font-mono">đã đạt kết quả</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Danh sách các đơn đăng ký & Lớp học -->
+    <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+        <div class="p-5 border-b border-border-standard flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+                </div>
+                <div>
+                    <h2 class="font-bold text-sm text-brand-deep">Khóa Học & Trạng Thái Đăng Ký</h2>
+                    <p class="text-xs text-outline">Theo dõi tình trạng phê duyệt và đóng học phí</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-surface-container-lowest border-b border-border-standard text-[11px] font-bold text-outline uppercase tracking-wider">
+                        <th class="py-3 px-4">Lớp Học</th>
+                        <th class="py-3 px-4">Ngày Khai Giảng</th>
+                        <th class="py-3 px-4">Học Phí</th>
+                        <th class="py-3 px-4">Ngày Đăng Ký</th>
+                        <th class="py-3 px-4">Trạng Thái Duyệt</th>
+                        <th class="py-3 px-4">Ghi Chú Giáo Vụ</th>
+                        <th class="py-3 px-4 text-right">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-subtle text-xs text-brand-deep">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-8 text-outline">
+                                <span class="material-symbols-outlined text-[36px] opacity-40 mb-1">sentiment_dissatisfied</span>
+                                <p>Bạn chưa đăng ký khóa học nào. Hãy bấm "Đăng ký lớp mới" để bắt đầu nhé!</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var dk in Model)
+                        {
+                            <tr class="hover:bg-surface-container-lowest/60 transition-colors">
+                                <td class="py-3.5 px-4">
+                                    <div class="font-bold text-brand-deep">
+                                        @(dk.LopHoc?.TenLop ?? $"Lớp #{dk.MaLop}")
+                                    </div>
+                                    <div class="text-[11px] text-outline">
+                                        @(dk.LopHoc?.ChuongTrinhDaoTao?.TenChuongTrinh ?? "Đào tạo nghiệp vụ")
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-4 font-mono">
+                                    @(dk.LopHoc?.NgayKhaiGiang.ToString("dd/MM/yyyy") ?? "—")
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <div class="font-mono font-bold text-emerald-700">
+                                        @(dk.LopHoc?.HocPhi.ToString("N0") ?? "0") đ
+                                    </div>
+                                    @if (dk.SoTienDaDong > 0)
+                                    {
+                                        <span class="text-[11px] text-outline font-mono">Đã nộp: @dk.SoTienDaDong.ToString("N0") đ</span>
+                                    }
+                                </td>
+                                <td class="py-3.5 px-4 font-mono text-outline">
+                                    @dk.NgayDangKy.ToString("dd/MM/yyyy")
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                                        @(dk.TrangThai == "Đã duyệt" || dk.TrangThai == "Đang học" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                                          dk.TrangThai == "Đã đóng học phí" || dk.TrangThai == "Hoàn thành" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                                          dk.TrangThai == "Chờ duyệt" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                                          "bg-rose-50 text-rose-700 border border-rose-200")">
+                                        <span class="w-1.5 h-1.5 rounded-full mr-1.5 @(dk.TrangThai == "Chờ duyệt" ? "bg-amber-500 animate-pulse" : "bg-current")"></span>
+                                        @dk.TrangThai
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-outline text-[11px] italic max-w-xs truncate">
+                                    @(string.IsNullOrWhiteSpace(dk.NhanXetGiaoVu) ? "—" : dk.NhanXetGiaoVu)
+                                </td>
+                                <td class="py-3.5 px-4 text-right">
+                                    @if (dk.TrangThai == "Chờ duyệt" || (dk.TrangThai == "Đã duyệt" && dk.SoTienDaDong == 0))
+                                    {
+                                        <button onclick="confirmHuyDangKy(@dk.MaDangKy, '@(dk.LopHoc?.TenLop?.Replace("'", "\\'") ?? "")')"
+                                                class="px-2.5 py-1 text-[11px] font-semibold rounded-lg text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors">
+                                            Hủy đăng ký
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-outline text-[11px]">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: 2 Cột: Lịch học cá nhân & Bảng điểm kết quả -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Lịch học -->
+        <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+            <div class="p-5 border-b border-border-standard flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                    </div>
+                    <h3 class="font-bold text-sm text-brand-deep">Lịch Buổi Học Cá Nhân</h3>
+                </div>
+                <span class="text-xs text-outline font-mono">@buoiHocs.Count buổi</span>
+            </div>
+
+            <div class="p-4 max-h-[380px] overflow-y-auto">
+                @if (buoiHocs.Count == 0)
+                {
+                    <div class="text-center py-8 text-outline text-xs">
+                        Hiện chưa có lịch học nào được sắp xếp cho các lớp của bạn.
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-2.5">
+                        @{ int bIdx = 1; }
+                        @foreach (var b in buoiHocs)
+                        {
+                            <div class="p-3 rounded-xl bg-surface-container-lowest border border-border-subtle flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-brand-deep text-surface-white font-mono font-bold flex items-center justify-center text-xs shrink-0">
+                                        B@(bIdx++)
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-brand-deep">@(b.LopHoc?.TenLop ?? "Lớp học")</div>
+                                        <div class="text-outline text-[11px] mt-0.5">
+                                            <span class="font-mono">@b.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm") - @b.ThoiGianKetThuc.ToString("HH:mm")</span>
+                                            <span class="mx-1">•</span>
+                                            <span>Phòng: <strong class="text-brand-deep">@b.PhongHoc</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded text-[11px] font-semibold
+                                    @(b.TrangThai == "Đã hoàn thành" ? "bg-emerald-50 text-emerald-700" :
+                                      b.TrangThai == "Đang diễn ra" ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700")">
+                                    @b.TrangThai
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Bảng điểm & Xếp loại -->
+        <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+            <div class="p-5 border-b border-border-standard flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+                    </div>
+                    <h3 class="font-bold text-sm text-brand-deep">Kết Quả Học Tập & Điểm Số</h3>
+                </div>
+                <span class="text-xs text-outline font-mono">@ketQuas.Count môn</span>
+            </div>
+
+            <div class="p-4 max-h-[380px] overflow-y-auto">
+                @if (ketQuas.Count == 0)
+                {
+                    <div class="text-center py-8 text-outline text-xs">
+                        Chưa có kết quả tổng kết nào được công bố.
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-3">
+                        @foreach (var kq in ketQuas)
+                        {
+                            <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-border-subtle flex items-center justify-between text-xs">
+                                <div>
+                                    <div class="font-bold text-brand-deep">@(kq.DangKyHoc?.LopHoc?.TenLop ?? "Khóa học")</div>
+                                    <div class="text-outline text-[11px] font-mono mt-1">
+                                        CC: @kq.DiemChuyenCan | CK: @kq.DiemCuoiKhoa
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-mono text-base font-black text-primary">@kq.DiemTongKet.ToString("0.0")</div>
+                                    <span class="text-[11px] font-bold @(kq.KetQua == "Hoàn thành" || kq.KetQua == "Đạt" ? "text-emerald-600" : "text-rose-600")">
+                                        @kq.KetQua
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function confirmHuyDangKy(maDangKy, tenLop) {
+        if (confirm(`Bạn có chắc chắn muốn hủy đăng ký lớp "${tenLop}" không?`)) {
+            const formData = new FormData();
+            formData.append('maDangKy', maDangKy);
+            formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+
+            fetch('/CongHocVien/HuyDangKyPost', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    if (window.showToast) window.showToast(res.message, 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    if (window.showToast) window.showToast(res.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (window.showToast) window.showToast('Có lỗi xảy ra khi hủy đăng ký!', 'error');
+            });
+        }
+    }
+</script>
+}

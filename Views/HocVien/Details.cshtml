@@ -1,0 +1,209 @@
+@model QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.HocVien
+@{
+    // Họ và tên: [Tên SV3]
+    // Mã sinh viên: [Mã SV3]
+    // Nội dung thực hiện: Chi tiết Hồ sơ Học viên (Module 3) - Phong cách Prep.vn
+    ViewData["Title"] = $"Hồ sơ học viên: {Model.HoTen}";
+    var dangKys = ViewBag.DangKys as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc>();
+    var ketQuas = ViewBag.KetQuas as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.KetQuaHocTap> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.KetQuaHocTap>();
+}
+
+<div class="flex flex-col gap-y-6">
+    <!-- Sub-header Navigation Bar -->
+    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-standard">
+        <div>
+            <div class="flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase tracking-wider mb-1">
+                <span>ĐÀO TẠO</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <a asp-action="Index" class="hover:text-primary transition-colors">QUẢN LÝ HỌC VIÊN</a>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span class="text-brand-deep font-semibold">CHI TIẾT HỒ SƠ</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <h1 class="font-headline-md text-headline-md text-brand-deep font-bold tracking-tight">
+                    @Model.HoTen
+                </h1>
+                <span class="font-mono text-xs px-2.5 py-1 rounded-md bg-surface-container-high text-brand-deep font-semibold border border-border-standard">
+                    #HV@Model.MaHocVien.ToString("D3")
+                </span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <a asp-action="Index" class="inline-flex items-center gap-1.5 bg-surface-white border border-border-standard hover:bg-surface-container-low text-brand-deep font-label-md text-label-md px-3.5 py-2.5 rounded-xl transition-all shadow-xs">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span>Quay lại</span>
+            </a>
+            <a asp-controller="DangKyHoc" asp-action="Index" class="inline-flex items-center gap-1.5 bg-primary hover:bg-[#0047b3] text-surface-white font-label-md text-label-md px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all">
+                <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+                <span>Xét duyệt đăng ký</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Student Info Card -->
+    <div class="bg-surface-white rounded-2xl border border-border-subtle p-6 shadow-[0_2px_12px_rgba(0,22,86,0.03)]">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 pb-6 border-b border-border-standard">
+            <div class="w-16 h-16 rounded-2xl bg-primary/10 text-primary font-black text-2xl flex items-center justify-center shrink-0 border border-primary/20">
+                @(string.IsNullOrWhiteSpace(Model.HoTen) ? "HV" : Model.HoTen.Substring(0, 1).ToUpper())
+            </div>
+            <div class="flex-1 space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-xl font-bold text-brand-deep">@Model.HoTen</h2>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                        @(Model.TrangThai == "Đang học" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                          Model.TrangThai == "Đã tốt nghiệp" || Model.TrangThai == "Hoàn thành" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                          "bg-amber-50 text-amber-700 border border-amber-200")">
+                        @Model.TrangThai
+                    </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 text-xs text-outline font-mono">
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px] text-primary">mail</span>
+                        @Model.Email
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px] text-primary">call</span>
+                        @(Model.SoDienThoai ?? "Chưa có")
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px] text-primary">account_circle</span>
+                        Tài khoản: @(Model.TaiKhoan?.TenDangNhap ?? "Chưa liên kết")
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 text-xs">
+            <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-border-subtle">
+                <span class="text-outline block mb-1">Ngày sinh</span>
+                <span class="font-bold text-brand-deep font-mono">@Model.NgaySinh.ToString("dd/MM/yyyy")</span>
+            </div>
+            <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-border-subtle">
+                <span class="text-outline block mb-1">Giới tính</span>
+                <span class="font-bold text-brand-deep">@Model.GioiTinh</span>
+            </div>
+            <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-border-subtle">
+                <span class="text-outline block mb-1">Trình độ học vấn</span>
+                <span class="font-bold text-brand-deep">@(Model.TrinhDoHocVan ?? "—")</span>
+            </div>
+            <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-border-subtle">
+                <span class="text-outline block mb-1">Nghề nghiệp</span>
+                <span class="font-bold text-brand-deep">@(Model.NgheNghiep ?? "—")</span>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.DiaChi))
+        {
+            <div class="mt-4 p-3.5 rounded-xl bg-surface-container-lowest border border-border-subtle text-xs">
+                <span class="text-outline block mb-0.5 font-medium">Địa chỉ:</span>
+                <span class="text-brand-deep font-medium">@Model.DiaChi</span>
+            </div>
+        }
+    </div>
+
+    <!-- 2 Cards: Lịch sử đăng ký & Kết quả học tập -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Card 1: Lịch sử đăng ký lớp -->
+        <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+            <div class="p-5 border-b border-border-standard flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[18px]">app_registration</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-brand-deep">Khóa Học Đã Đăng Ký</h3>
+                        <span class="text-xs text-outline">@dangKys.Count lớp đào tạo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 overflow-x-auto">
+                @if (dangKys.Count == 0)
+                {
+                    <div class="text-center py-8 text-outline text-xs">
+                        Học viên chưa đăng ký khóa học nào.
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-3">
+                        @foreach (var dk in dangKys)
+                        {
+                            <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-border-subtle flex items-center justify-between text-xs">
+                                <div class="space-y-1">
+                                    <div class="font-bold text-brand-deep">
+                                        @(dk.LopHoc?.TenLop ?? $"Lớp #{dk.MaLop}")
+                                    </div>
+                                    <div class="text-outline text-[11px] font-mono">
+                                        ĐK: @dk.NgayDangKy.ToString("dd/MM/yyyy") • Đã nộp: <span class="font-bold text-emerald-700">@dk.SoTienDaDong.ToString("N0") đ</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(dk.NhanXetGiaoVu))
+                                    {
+                                        <div class="text-[11px] text-outline italic">
+                                            GV: @dk.NhanXetGiaoVu
+                                        </div>
+                                    }
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold
+                                    @(dk.TrangThai == "Đã duyệt" || dk.TrangThai == "Đang học" ? "bg-blue-50 text-blue-700" :
+                                      dk.TrangThai == "Đã đóng học phí" || dk.TrangThai == "Hoàn thành" ? "bg-emerald-50 text-emerald-700" :
+                                      dk.TrangThai == "Chờ duyệt" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700")">
+                                    @dk.TrangThai
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Card 2: Điểm số & Kết quả -->
+        <div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+            <div class="p-5 border-b border-border-standard flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[18px]">grade</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-brand-deep">Kết Quả Đánh Giá Học Tập</h3>
+                        <span class="text-xs text-outline">@ketQuas.Count kết quả môn</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 overflow-x-auto">
+                @if (ketQuas.Count == 0)
+                {
+                    <div class="text-center py-8 text-outline text-xs">
+                        Chưa có bảng điểm nào được ghi nhận.
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-3">
+                        @foreach (var kq in ketQuas)
+                        {
+                            <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-border-subtle flex items-center justify-between text-xs">
+                                <div>
+                                    <div class="font-bold text-brand-deep">
+                                        @(kq.DangKyHoc?.LopHoc?.TenLop ?? $"Lớp #{kq.DangKyHoc?.MaLop}")
+                                    </div>
+                                    <div class="text-outline text-[11px] font-mono mt-0.5">
+                                        Điểm CC: @kq.DiemChuyenCan | CK: @kq.DiemCuoiKhoa
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-mono font-bold text-base text-primary block">@kq.DiemTongKet.ToString("0.0")</span>
+                                    <span class="text-[11px] font-semibold @(kq.KetQua == "Hoàn thành" || kq.KetQua == "Đạt" ? "text-emerald-600" : "text-rose-600")">
+                                        @kq.KetQua
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

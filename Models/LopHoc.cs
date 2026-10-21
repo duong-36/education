@@ -53,6 +53,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models
         public string TrangThai { get; set; } // Chưa mở, Đang mở đăng ký, Tạm dừng, Đã đóng đăng ký
 
         [ForeignKey("MaChuongTrinh")]
-        public virtual ChuongTrinhDaoTao ChuongTrinhDaoTao { get; set; }
+        public virtual ChuongTrinhDaoTao? ChuongTrinhDaoTao { get; set; }
     }
 }

@@ -46,6 +46,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models
         public string TrangThai { get; set; }
 
         [ForeignKey("MaTaiKhoan")]
-        public virtual TaiKhoan TaiKhoan { get; set; }
+        public virtual TaiKhoan? TaiKhoan { get; set; }
     }
 }

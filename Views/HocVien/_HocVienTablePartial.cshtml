@@ -1,0 +1,161 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.HocVien>
+@{
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int pageSize = ViewBag.PageSize ?? 10;
+    string search = ViewBag.Search ?? "";
+    string selectedTrangThai = ViewBag.SelectedTrangThai ?? "";
+    string selectedTrinhDo = ViewBag.SelectedTrinhDo ?? "";
+}
+
+<!-- Table Container -->
+<div class="bg-surface-white rounded-2xl border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="hocvien-table">
+            <thead>
+                <tr class="bg-surface-container-lowest border-b border-border-standard text-[11px] font-bold text-outline uppercase tracking-wider">
+                    <th class="py-3.5 px-4 w-12 text-center">#</th>
+                    <th class="py-3.5 px-4">Mã HV</th>
+                    <th class="py-3.5 px-4">Họ và Tên</th>
+                    <th class="py-3.5 px-4">Liên hệ</th>
+                    <th class="py-3.5 px-4">Ngày sinh / Giới tính</th>
+                    <th class="py-3.5 px-4">Trình độ & Nghề nghiệp</th>
+                    <th class="py-3.5 px-4 text-center">Trạng thái</th>
+                    <th class="py-3.5 px-4 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-border-subtle text-xs text-brand-deep">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-12 text-outline">
+                            <span class="material-symbols-outlined text-[40px] mb-2 opacity-40">school</span>
+                            <p class="font-medium">Không tìm thấy học viên nào phù hợp.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int idx = (currentPage - 1) * pageSize + 1;
+                    foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-surface-container-lowest/60 transition-colors">
+                            <td class="py-3.5 px-4 text-center text-outline font-mono text-[11px]">@(idx++)</td>
+                            <td class="py-3.5 px-4 font-mono font-semibold text-primary">
+                                #HV@item.MaHocVien.ToString("D3")
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0">
+                                        @(string.IsNullOrWhiteSpace(item.HoTen) ? "H" : item.HoTen.Substring(0, 1).ToUpper())
+                                    </div>
+                                    <div>
+                                        <a asp-action="Details" asp-route-id="@item.MaHocVien" class="font-bold text-brand-deep hover:text-primary transition-colors">
+                                            @item.HoTen
+                                        </a>
+                                        @if (item.TaiKhoan != null)
+                                        {
+                                            <div class="text-[11px] text-outline font-mono flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[13px]">account_circle</span>
+                                                <span>@item.TaiKhoan.TenDangNhap</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-brand-deep font-medium">@item.Email</span>
+                                    <span class="text-outline font-mono text-[11px]">@item.SoDienThoai</span>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="font-mono text-brand-deep">@item.NgaySinh.ToString("dd/MM/yyyy")</span>
+                                    <span class="text-outline text-[11px]">@item.GioiTinh</span>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="font-medium text-brand-deep">@(item.TrinhDoHocVan ?? "—")</span>
+                                    <span class="text-outline text-[11px]">@(item.NgheNghiep ?? "—")</span>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                                    @(item.TrangThai == "Đang học" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                                      item.TrangThai == "Đã tốt nghiệp" || item.TrangThai == "Hoàn thành" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                                      item.TrangThai == "Bảo lưu" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                                      "bg-slate-100 text-slate-700 border border-slate-300")">
+                                    <span class="w-1.5 h-1.5 rounded-full mr-1.5 @(item.TrangThai == "Đang học" ? "bg-emerald-500 animate-pulse" : "bg-current")"></span>
+                                    @item.TrangThai
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <div class="inline-flex items-center gap-1">
+                                    <a asp-action="Details" asp-route-id="@item.MaHocVien" title="Xem chi tiết & Lịch sử" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-surface-container-high transition-colors">
+                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    </a>
+                                    <button type="button" onclick="openEditDrawer(@item.MaHocVien)" title="Chỉnh sửa" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-surface-container-high transition-colors">
+                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    </button>
+                                    <button type="button" onclick="confirmDelete(@item.MaHocVien, '@item.HoTen.Replace("'", "\\'")')" title="Xóa học viên" class="p-1.5 rounded-lg text-outline hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination & Summary -->
+    <div class="px-5 py-4 border-t border-border-standard flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-outline">
+        <div>
+            Hiển thị <span class="font-bold text-brand-deep">@Model.Count()</span> trên tổng số <span class="font-bold text-brand-deep">@totalItems</span> học viên
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="flex items-center gap-1">
+                <!-- Nút Đầu -->
+                <button type="button" onclick="changePage(1)" @(currentPage == 1 ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">first_page</span>
+                </button>
+                <!-- Nút Trước -->
+                <button type="button" onclick="changePage(@(currentPage - 1))" @(currentPage == 1 ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                </button>
+
+                <!-- Số trang (chỉ hiển thị trang trước, hiện tại, sau theo yêu cầu người dùng) -->
+                @{
+                    int startP = Math.Max(1, currentPage - 1);
+                    int endP = Math.Min(totalPages, currentPage + 1);
+                    for (int p = startP; p <= endP; p++)
+                    {
+                        if (p == currentPage)
+                        {
+                            <span class="w-8 h-8 rounded-lg bg-primary text-surface-white font-bold flex items-center justify-center font-mono">@p</span>
+                        }
+                        else
+                        {
+                            <button type="button" onclick="changePage(@p)" class="w-8 h-8 rounded-lg border border-border-standard hover:bg-surface-container-low text-brand-deep font-mono">@p</button>
+                        }
+                    }
+                }
+
+                <!-- Nút Sau -->
+                <button type="button" onclick="changePage(@(currentPage + 1))" @(currentPage == totalPages ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+                <!-- Nút Cuối -->
+                <button type="button" onclick="changePage(@totalPages)" @(currentPage == totalPages ? "disabled" : "") class="p-1.5 rounded-lg border border-border-standard hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span class="material-symbols-outlined text-[16px]">last_page</span>
+                </button>
+            </div>
+        }
+    </div>
+</div>
