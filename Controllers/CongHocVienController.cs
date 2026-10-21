@@ -89,7 +89,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 var dks = await _context.DangKyHocs
                     .Where(d => d.MaHocVien == student.MaHocVien && d.TrangThai != "Đã hủy")
                     .ToListAsync();
-                myRegistrations = dks.ToDictionary(d => d.MaLop, d => d);
+                myRegistrations = dks
+                    .GroupBy(d => d.MaLop)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(d => d.MaDangKy).First());
             }
 
             ViewBag.SiSoMap = siSoMap;
