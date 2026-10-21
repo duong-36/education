@@ -8,10 +8,13 @@
     int totalPages = ViewBag.TotalPages ?? 1;
     int totalItems = ViewBag.TotalItems ?? 0;
     string search = ViewBag.Search ?? "";
+    int? selectedMaCT = ViewBag.SelectedMaChuongTrinh;
     int? selectedMaLop = ViewBag.SelectedMaLop;
     string selectedTrangThai = ViewBag.SelectedTrangThai ?? "";
     string tuNgay = ViewBag.TuNgay ?? "";
     string denNgay = ViewBag.DenNgay ?? "";
+    string sortBy = ViewBag.SortBy ?? "";
+    var chuongTrinhList = ViewBag.ChuongTrinhList as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.ChuongTrinhDaoTao> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.ChuongTrinhDaoTao>();
     var lopHocList = ViewBag.LopHocList as IEnumerable<dynamic> ?? new List<dynamic>();
 }
 
@@ -90,6 +93,17 @@
                        class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep placeholder:text-outline/60" />
             </div>
 
+            <!-- Filter Chương trình đào tạo (Mục 8.1) -->
+            <div class="min-w-[170px]">
+                <select id="filterMaCT" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
+                    <option value="">Tất cả CTĐT</option>
+                    @foreach (var ct in chuongTrinhList)
+                    {
+                        <!option value="@ct.MaChuongTrinh" @(selectedMaCT == ct.MaChuongTrinh ? "selected" : "")>@ct.TenChuongTrinh</!option>
+                    }
+                </select>
+            </div>
+
             <!-- Filter Lớp học -->
             <div class="min-w-[170px]">
                 <select id="filterMaLop" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
@@ -112,6 +126,16 @@
                     <!option value="Hoàn thành" @(selectedTrangThai == "Hoàn thành" ? "selected" : "")>Hoàn thành</!option>
                     <!option value="Từ chối" @(selectedTrangThai == "Từ chối" ? "selected" : "")>Từ chối</!option>
                     <!option value="Đã hủy" @(selectedTrangThai == "Đã hủy" ? "selected" : "")>Đã hủy</!option>
+                </select>
+            </div>
+
+            <!-- Sắp xếp (Mục 8.1) -->
+            <div class="min-w-[150px]">
+                <select id="filterSortBy" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
+                    <!option value="" @(sortBy == "" ? "selected" : "")>Mới nhất trước</!option>
+                    <!option value="ngay_asc" @(sortBy == "ngay_asc" ? "selected" : "")>Cũ nhất trước</!option>
+                    <!option value="ten_asc" @(sortBy == "ten_asc" ? "selected" : "")>Tên học viên A-Z</!option>
+                    <!option value="ten_desc" @(sortBy == "ten_desc" ? "selected" : "")>Tên học viên Z-A</!option>
                 </select>
             </div>
 
@@ -291,15 +315,19 @@
         searchDebounceTimer = setTimeout(() => { currentPage = 1; loadTableData(); }, 350);
     });
 
+    document.getElementById('filterMaCT').addEventListener('change', () => { currentPage = 1; loadTableData(); });
     document.getElementById('filterMaLop').addEventListener('change', () => { currentPage = 1; loadTableData(); });
     document.getElementById('filterTrangThai').addEventListener('change', () => { currentPage = 1; loadTableData(); });
+    document.getElementById('filterSortBy').addEventListener('change', () => { currentPage = 1; loadTableData(); });
     document.getElementById('filterTuNgay').addEventListener('change', () => { currentPage = 1; loadTableData(); });
     document.getElementById('filterDenNgay').addEventListener('change', () => { currentPage = 1; loadTableData(); });
 
     function resetFilters() {
         document.getElementById('searchInput').value = '';
+        document.getElementById('filterMaCT').value = '';
         document.getElementById('filterMaLop').value = '';
         document.getElementById('filterTrangThai').value = '';
+        document.getElementById('filterSortBy').value = '';
         document.getElementById('filterTuNgay').value = '';
         document.getElementById('filterDenNgay').value = '';
         currentPage = 1;
@@ -313,15 +341,19 @@
 
     function loadTableData() {
         const search = document.getElementById('searchInput').value.trim();
+        const maChuongTrinh = document.getElementById('filterMaCT').value;
         const maLop = document.getElementById('filterMaLop').value;
         const trangThai = document.getElementById('filterTrangThai').value;
+        const sortBy = document.getElementById('filterSortBy').value;
         const tuNgay = document.getElementById('filterTuNgay').value;
         const denNgay = document.getElementById('filterDenNgay').value;
 
         const params = new URLSearchParams({
             search: search,
+            maChuongTrinh: maChuongTrinh,
             maLop: maLop,
             trangThai: trangThai,
+            sortBy: sortBy,
             tuNgay: tuNgay,
             denNgay: denNgay,
             page: currentPage

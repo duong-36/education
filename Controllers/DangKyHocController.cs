@@ -25,10 +25,12 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         // --- DANH SÁCH HỒ SƠ ĐĂNG KÝ (LINQ MULTI-FILTER, SEARCH, PAGINATION, AJAX) ---
         public async Task<IActionResult> Index(
             string search,
+            int? maChuongTrinh,
             int? maLop,
             string trangThai,
             DateTime? tuNgay,
             DateTime? denNgay,
+            string sortBy,
             int page = 1,
             int pageSize = 10)
         {
@@ -51,19 +53,25 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                     ("dk" + d.MaDangKy.ToString()).Contains(kw));
             }
 
-            // 2. Lọc theo lớp học
+            // 2. Lọc theo chương trình đào tạo (Mục 8.1)
+            if (maChuongTrinh.HasValue)
+            {
+                query = query.Where(d => d.LopHoc != null && d.LopHoc.MaChuongTrinh == maChuongTrinh.Value);
+            }
+
+            // 3. Lọc theo lớp học
             if (maLop.HasValue)
             {
                 query = query.Where(d => d.MaLop == maLop.Value);
             }
 
-            // 3. Lọc theo trạng thái duyệt
+            // 4. Lọc theo trạng thái duyệt
             if (!string.IsNullOrWhiteSpace(trangThai))
             {
                 query = query.Where(d => d.TrangThai == trangThai);
             }
 
-            // 4. Lọc theo khoảng ngày đăng ký
+            // 5. Lọc theo khoảng ngày đăng ký
             if (tuNgay.HasValue)
             {
                 query = query.Where(d => d.NgayDangKy >= tuNgay.Value.Date);
@@ -74,15 +82,25 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 query = query.Where(d => d.NgayDangKy <= end);
             }
 
+            // 6. Sắp xếp theo ngày đăng ký hoặc tên học viên (Mục 8.1)
+            query = sortBy switch
+            {
+                "ngay_asc" => query.OrderBy(d => d.NgayDangKy),
+                "ten_asc" => query.OrderBy(d => d.HocVien != null ? d.HocVien.HoTen : ""),
+                "ten_desc" => query.OrderByDescending(d => d.HocVien != null ? d.HocVien.HoTen : ""),
+                _ => query.OrderByDescending(d => d.NgayDangKy)
+            };
+
             // 3 KPI Cards (Toàn hệ thống)
             ViewBag.ChoDuyetCount = await _context.DangKyHocs.CountAsync(d => d.TrangThai == "Chờ duyệt");
             ViewBag.DaDuyetCount = await _context.DangKyHocs.CountAsync(d => d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học");
             ViewBag.TongDoanhThu = await _context.DangKyHocs.SumAsync(d => (double?)d.SoTienDaDong) ?? 0;
 
-            // Danh sách lớp học cho dropdown filter
+            // Danh sách chương trình & lớp học cho dropdown filter
+            ViewBag.ChuongTrinhList = await _context.ChuongTrinhDaoTaos.OrderBy(c => c.TenChuongTrinh).ToListAsync();
             ViewBag.LopHocList = await _context.LopHocs
                 .OrderByDescending(l => l.MaLop)
-                .Select(l => new { l.MaLop, l.TenLop })
+                .Select(l => new { l.MaLop, l.TenLop, l.MaChuongTrinh })
                 .ToListAsync();
 
             // Phân trang LINQ
@@ -93,7 +111,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             if (page > totalPages) page = totalPages;
 
             var items = await query
-                .OrderByDescending(d => d.NgayDangKy)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -103,10 +120,12 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             ViewBag.TotalItems = totalItems;
             ViewBag.PageSize = pageSize;
             ViewBag.Search = search;
+            ViewBag.SelectedMaChuongTrinh = maChuongTrinh;
             ViewBag.SelectedMaLop = maLop;
             ViewBag.SelectedTrangThai = trangThai;
             ViewBag.TuNgay = tuNgay?.ToString("yyyy-MM-dd");
             ViewBag.DenNgay = denNgay?.ToString("yyyy-MM-dd");
+            ViewBag.SortBy = sortBy;
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
