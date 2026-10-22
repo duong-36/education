@@ -1,5 +1,5 @@
-// Họ và tên: [Tên SV2]
-// Mã sinh viên: [Mã SV2]
+// Họ và tên: Nguyễn Đình Kiên
+// Mã sinh viên: 23103100020
 // Nội dung thực hiện: Entity Lớp học (Module 2)
 
 using System;

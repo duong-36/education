@@ -1,5 +1,5 @@
-// Họ và tên: [Tên SV3, SV4]
-// Mã sinh viên: [Mã SV3, SV4]
+// Họ và tên: Nguyễn Hoàng Long (Module 4) - Nguyễn Đức Linh (Module 3)
+// Mã sinh viên: 23103100046 - 23103100042
 // Nội dung thực hiện: Entity Đăng ký học (Module 3 & 4)
 
 using System;

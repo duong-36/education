@@ -1,5 +1,5 @@
-// Họ và tên: [Tên SV3]
-// Mã sinh viên: [Mã SV3]
+// Họ và tên: Nguyễn Đức Linh
+// Mã sinh viên: 23103100042
 // Nội dung thực hiện: Entity Học viên (Module 3)
 
 using System;

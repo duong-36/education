@@ -1,5 +1,5 @@
-// Họ và tên: [Tên SV4]
-// Mã sinh viên: [Mã SV4]
+// Họ và tên: Nguyễn Hoàng Long
+// Mã sinh viên: 23103100046
 // Nội dung thực hiện: Tiếp nhận, Xét duyệt đăng ký & Thu học phí (Module 4) - Phía Giáo vụ & Admin
 
 using System;
