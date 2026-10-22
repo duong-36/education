@@ -43,6 +43,9 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             return await _context.HocViens.FirstOrDefaultAsync();
         }
 
+        // --- ĐIỀU HƯỚNG TRANG CHỦ CỔNG HỌC VIÊN ---
+        public IActionResult Index() => RedirectToAction(nameof(DangKy));
+
         // --- TRANG CHỦ MARKETPLACE KHÓA HỌC (STOREFRONT EDU-COMMERCE) ---
         public async Task<IActionResult> DangKy(
             string search,

@@ -9,11 +9,11 @@ public class HomeController : Controller
     public IActionResult Index()
     {
         var vaiTro = HttpContext.Session.GetString("VaiTro");
-        if (vaiTro == "Học viên")
+        if (vaiTro == "Admin" || vaiTro == "Giáo vụ")
         {
-            return RedirectToAction("DangKy", "CongHocVien");
+            return RedirectToAction("Dashboard", "ThongKe");
         }
-        return RedirectToAction("Dashboard", "ThongKe");
+        return RedirectToAction("DangKy", "CongHocVien");
     }
 
     public IActionResult Privacy()
