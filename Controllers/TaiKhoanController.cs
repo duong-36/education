@@ -3,24 +3,22 @@
 // Nội dung thực hiện: Module 1 - Tài khoản, Đăng nhập, Phân quyền Session
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Data;
 using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models;
+using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Services.Interfaces;
 using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.ViewModels;
 
 namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 {
     public class TaiKhoanController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ITaiKhoanService _taiKhoanService;
 
-        public TaiKhoanController(ApplicationDbContext context)
+        public TaiKhoanController(ITaiKhoanService taiKhoanService)
         {
-            _context = context;
+            _taiKhoanService = taiKhoanService;
         }
 
         // --- ĐĂNG KÝ TÀI KHOẢN HỌC VIÊN (PUBLIC) ---
@@ -45,60 +43,17 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 return View(model);
             }
 
-            string username = model.TenDangNhap.Trim();
-            string email = model.Email.Trim().ToLower();
-
-            // 1. Kiểm tra trùng tên đăng nhập
-            bool usernameExists = await _context.TaiKhoans
-                .AnyAsync(t => t.TenDangNhap.ToLower() == username.ToLower());
-            if (usernameExists)
+            var result = await _taiKhoanService.RegisterStudentAsync(model);
+            if (!result.Success)
             {
-                ModelState.AddModelError("TenDangNhap", "Tên đăng nhập này đã tồn tại trong hệ thống. Vui lòng chọn tên khác.");
+                ModelState.AddModelError("", result.Message);
                 return View(model);
             }
 
-            // 2. Kiểm tra trùng Email
-            bool emailExists = await _context.TaiKhoans
-                .AnyAsync(t => t.Email.ToLower() == email);
-            if (emailExists)
-            {
-                ModelState.AddModelError("Email", "Địa chỉ email này đã được sử dụng cho một tài khoản khác.");
-                return View(model);
-            }
+            var tk = result.User!;
+            var hv = result.HocVien!;
 
-            // 3. TẠO TÀI KHOẢN (MẶC ĐỊNH BẮT BUỘC LÀ HỌC VIÊN)
-            var tk = new TaiKhoan
-            {
-                TenDangNhap = username,
-                MatKhau = model.MatKhau,
-                HoTen = model.HoTen.Trim(),
-                Email = email,
-                VaiTro = "Học viên", // MẶC ĐỊNH CỐ ĐỊNH LÀ HỌC VIÊN
-                TrangThai = "Đang hoạt động"
-            };
-
-            _context.TaiKhoans.Add(tk);
-            await _context.SaveChangesAsync();
-
-            // 4. TỰ ĐỘNG TẠO HỒ SƠ HỌC VIÊN TƯƠNG ỨNG
-            var hv = new HocVien
-            {
-                MaTaiKhoan = tk.MaTaiKhoan,
-                HoTen = model.HoTen.Trim(),
-                Email = email,
-                SoDienThoai = model.SoDienThoai?.Trim() ?? "",
-                NgaySinh = model.NgaySinh ?? DateTime.Today.AddYears(-20),
-                GioiTinh = string.IsNullOrWhiteSpace(model.GioiTinh) ? "Nam" : model.GioiTinh,
-                DiaChi = string.IsNullOrWhiteSpace(model.DiaChi) ? "Hà Nội" : model.DiaChi.Trim(),
-                TrinhDoHocVan = "Đại học",
-                NgheNghiep = "Học viên",
-                TrangThai = "Đang học"
-            };
-
-            _context.HocViens.Add(hv);
-            await _context.SaveChangesAsync();
-
-            // 5. ĐĂNG NHẬP TỰ ĐỘNG VÀO SESSION
+            // TỰ ĐỘNG ĐĂNG NHẬP VÀO SESSION
             HttpContext.Session.SetInt32("MaTaiKhoan", tk.MaTaiKhoan);
             HttpContext.Session.SetString("TenDangNhap", tk.TenDangNhap);
             HttpContext.Session.SetString("HoTen", tk.HoTen);
@@ -116,7 +71,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         public IActionResult Login(string? returnUrl = null)
         {
             ViewBag.ReturnUrl = returnUrl;
-            // Nếu đã đăng nhập thì chuyển hướng phù hợp
             var vaiTro = HttpContext.Session.GetString("VaiTro");
             if (!string.IsNullOrEmpty(vaiTro))
             {
@@ -130,43 +84,24 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string tenDangNhap, string matKhau, string? returnUrl = null)
         {
-            if (string.IsNullOrWhiteSpace(tenDangNhap) || string.IsNullOrWhiteSpace(matKhau))
+            var result = await _taiKhoanService.AuthenticateAsync(tenDangNhap, matKhau);
+            if (!result.Success)
             {
-                ViewBag.Error = "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.";
+                ViewBag.Error = result.Message;
+                ViewBag.ReturnUrl = returnUrl;
                 return View();
             }
 
-            tenDangNhap = tenDangNhap.Trim();
-            var user = await _context.TaiKhoans
-                .FirstOrDefaultAsync(t => t.TenDangNhap == tenDangNhap && t.MatKhau == matKhau);
-
-            if (user == null)
-            {
-                ViewBag.Error = "Tên đăng nhập hoặc mật khẩu không chính xác.";
-                return View();
-            }
-
-            if (user.TrangThai == "Bị khóa")
-            {
-                ViewBag.Error = "Tài khoản này hiện đang bị khóa. Vui lòng liên hệ Admin để được hỗ trợ.";
-                return View();
-            }
-
-            // Ghi nhận thông tin vào Session
+            var user = result.User!;
             HttpContext.Session.SetInt32("MaTaiKhoan", user.MaTaiKhoan);
             HttpContext.Session.SetString("TenDangNhap", user.TenDangNhap);
             HttpContext.Session.SetString("HoTen", user.HoTen);
             HttpContext.Session.SetString("VaiTro", user.VaiTro);
             HttpContext.Session.SetString("Email", user.Email);
 
-            // Nếu là Học viên, lưu thêm MaHocVien
-            if (user.VaiTro == "Học viên")
+            if (user.VaiTro == "Học viên" && result.HocVien != null)
             {
-                var hv = await _context.HocViens.FirstOrDefaultAsync(h => h.MaTaiKhoan == user.MaTaiKhoan);
-                if (hv != null)
-                {
-                    HttpContext.Session.SetInt32("MaHocVien", hv.MaHocVien);
-                }
+                HttpContext.Session.SetInt32("MaHocVien", result.HocVien.MaHocVien);
             }
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -185,35 +120,25 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         [HttpGet]
         public async Task<IActionResult> QuickLogin(string role = "Admin")
         {
-            TaiKhoan? user = null;
-            if (role == "Admin")
-            {
-                user = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.VaiTro == "Admin" && t.TrangThai == "Đang hoạt động");
-            }
-            else if (role == "GiaoVu")
-            {
-                user = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.VaiTro == "Giáo vụ" && t.TrangThai == "Đang hoạt động");
-            }
-            else
-            {
-                user = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.VaiTro == "Học viên" && t.TrangThai == "Đang hoạt động");
-            }
-
+            var user = await _taiKhoanService.GetQuickLoginUserAsync(role);
             if (user != null)
             {
-                HttpContext.Session.SetInt32("MaTaiKhoan", user.MaTaiKhoan);
-                HttpContext.Session.SetString("TenDangNhap", user.TenDangNhap);
-                HttpContext.Session.SetString("HoTen", user.HoTen);
-                HttpContext.Session.SetString("VaiTro", user.VaiTro);
-                HttpContext.Session.SetString("Email", user.Email);
-
-                if (user.VaiTro == "Học viên")
+                var auth = await _taiKhoanService.AuthenticateAsync(user.TenDangNhap, user.MatKhau);
+                if (auth.Success)
                 {
-                    var hv = await _context.HocViens.FirstOrDefaultAsync(h => h.MaTaiKhoan == user.MaTaiKhoan);
-                    if (hv != null) HttpContext.Session.SetInt32("MaHocVien", hv.MaHocVien);
-                    return RedirectToAction("DangKy", "CongHocVien");
+                    HttpContext.Session.SetInt32("MaTaiKhoan", user.MaTaiKhoan);
+                    HttpContext.Session.SetString("TenDangNhap", user.TenDangNhap);
+                    HttpContext.Session.SetString("HoTen", user.HoTen);
+                    HttpContext.Session.SetString("VaiTro", user.VaiTro);
+                    HttpContext.Session.SetString("Email", user.Email);
+
+                    if (user.VaiTro == "Học viên" && auth.HocVien != null)
+                    {
+                        HttpContext.Session.SetInt32("MaHocVien", auth.HocVien.MaHocVien);
+                        return RedirectToAction("DangKy", "CongHocVien");
+                    }
+                    return RedirectToAction("Dashboard", "ThongKe");
                 }
-                return RedirectToAction("Dashboard", "ThongKe");
             }
 
             return RedirectToAction(nameof(Login));
@@ -230,49 +155,19 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         public async Task<IActionResult> Index(int page = 1, string search = "", string vaiTro = "", string trangThai = "")
         {
             int pageSize = 10;
-            var query = _context.TaiKhoans.AsQueryable();
+            var (items, totalItems, totalPages, currentPage, tongTaiKhoan, dangHoatDong, biKhoa) = 
+                await _taiKhoanService.GetFilteredAccountsAsync(page, pageSize, search, vaiTro, trangThai);
 
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                string s = search.ToLower().Trim();
-                query = query.Where(t => t.TenDangNhap.ToLower().Contains(s) || 
-                                         t.HoTen.ToLower().Contains(s) || 
-                                         t.Email.ToLower().Contains(s));
-            }
-
-            if (!string.IsNullOrWhiteSpace(vaiTro))
-            {
-                query = query.Where(t => t.VaiTro == vaiTro);
-            }
-
-            if (!string.IsNullOrWhiteSpace(trangThai))
-            {
-                query = query.Where(t => t.TrangThai == trangThai);
-            }
-
-            int totalItems = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-            if (totalPages < 1) totalPages = 1;
-            if (page < 1) page = 1;
-            if (page > totalPages) page = totalPages;
-
-            var items = await query
-                .OrderByDescending(t => t.MaTaiKhoan)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = currentPage;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;
             ViewBag.Search = search;
             ViewBag.SelectedVaiTro = vaiTro;
             ViewBag.SelectedTrangThai = trangThai;
 
-            // 3 KPI cards
-            ViewBag.TongTaiKhoan = await _context.TaiKhoans.CountAsync();
-            ViewBag.DangHoatDong = await _context.TaiKhoans.CountAsync(t => t.TrangThai == "Đang hoạt động");
-            ViewBag.BiKhoa = await _context.TaiKhoans.CountAsync(t => t.TrangThai == "Bị khóa");
+            ViewBag.TongTaiKhoan = tongTaiKhoan;
+            ViewBag.DangHoatDong = dangHoatDong;
+            ViewBag.BiKhoa = biKhoa;
 
             return View(items);
         }
@@ -282,31 +177,17 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         public async Task<IActionResult> CreatePost(TaiKhoan tk)
         {
             bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            var result = await _taiKhoanService.CreateAccountAsync(tk);
 
-            if (string.IsNullOrWhiteSpace(tk.TenDangNhap) || string.IsNullOrWhiteSpace(tk.MatKhau))
+            if (!result.Success)
             {
-                if (isAjax) return Json(new { success = false, message = "Tên đăng nhập và mật khẩu không được để trống." });
-                TempData["Error"] = "Tên đăng nhập và mật khẩu không được để trống.";
+                if (isAjax) return Json(new { success = false, message = result.Message });
+                TempData["Error"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            tk.TenDangNhap = tk.TenDangNhap.Trim();
-            bool exists = await _context.TaiKhoans.AnyAsync(t => t.TenDangNhap.ToLower() == tk.TenDangNhap.ToLower());
-            if (exists)
-            {
-                if (isAjax) return Json(new { success = false, message = "Tên đăng nhập này đã tồn tại trong hệ thống." });
-                TempData["Error"] = "Tên đăng nhập này đã tồn tại.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (string.IsNullOrEmpty(tk.TrangThai)) tk.TrangThai = "Đang hoạt động";
-            if (string.IsNullOrEmpty(tk.VaiTro)) tk.VaiTro = "Học viên";
-
-            _context.Add(tk);
-            await _context.SaveChangesAsync();
-
-            if (isAjax) return Json(new { success = true, message = "Thêm tài khoản mới thành công!" });
-            TempData["Success"] = "Thêm tài khoản mới thành công!";
+            if (isAjax) return Json(new { success = true, message = result.Message });
+            TempData["Success"] = result.Message;
             return RedirectToAction(nameof(Index));
         }
 
@@ -315,76 +196,17 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         public async Task<IActionResult> EditPost(int maTaiKhoan, string hoTen, string email, string vaiTro, string trangThai, string? matKhauMoi)
         {
             bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
-            var user = await _context.TaiKhoans.FindAsync(maTaiKhoan);
-            if (user == null)
+            var result = await _taiKhoanService.EditAccountAsync(maTaiKhoan, hoTen, email, vaiTro, trangThai, matKhauMoi);
+
+            if (!result.Success)
             {
-                if (isAjax) return Json(new { success = false, message = "Không tìm thấy tài khoản cần chỉnh sửa." });
-                TempData["Error"] = "Không tìm thấy tài khoản.";
+                if (isAjax) return Json(new { success = false, message = result.Message });
+                TempData["Error"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            user.HoTen = hoTen.Trim();
-            user.Email = email.Trim();
-            user.VaiTro = vaiTro;
-            user.TrangThai = trangThai;
-            if (!string.IsNullOrWhiteSpace(matKhauMoi))
-            {
-                user.MatKhau = matKhauMoi.Trim();
-            }
-
-            await _context.SaveChangesAsync();
-
-            if (isAjax) return Json(new { success = true, message = "Cập nhật tài khoản thành công!" });
-            TempData["Success"] = "Cập nhật tài khoản thành công!";
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ToggleLock(int id)
-        {
-            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
-            var user = await _context.TaiKhoans.FindAsync(id);
-            if (user == null)
-            {
-                if (isAjax) return Json(new { success = false, message = "Tài khoản không tồn tại." });
-                return RedirectToAction(nameof(Index));
-            }
-
-            user.TrangThai = (user.TrangThai == "Bị khóa") ? "Đang hoạt động" : "Bị khóa";
-            await _context.SaveChangesAsync();
-
-            string msg = user.TrangThai == "Bị khóa" ? $"Đã khóa tài khoản {user.TenDangNhap}." : $"Đã mở khóa tài khoản {user.TenDangNhap}.";
-            if (isAjax) return Json(new { success = true, message = msg, trangThai = user.TrangThai });
-
-            TempData["Success"] = msg;
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeletePost(int id)
-        {
-            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
-            var user = await _context.TaiKhoans.FindAsync(id);
-            if (user == null)
-            {
-                if (isAjax) return Json(new { success = false, message = "Tài khoản không tồn tại." });
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Kiểm tra ràng buộc học viên
-            bool coHocVien = await _context.HocViens.AnyAsync(h => h.MaTaiKhoan == id);
-            if (coHocVien)
-            {
-                if (isAjax) return Json(new { success = false, message = "Không thể xóa tài khoản này vì đã có dữ liệu hồ sơ học viên liên kết. Bạn có thể chọn khóa tài khoản." });
-                TempData["Error"] = "Không thể xóa tài khoản đã có hồ sơ học viên liên kết.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            _context.TaiKhoans.Remove(user);
-            await _context.SaveChangesAsync();
-
-            if (isAjax) return Json(new { success = true, message = "Đã xóa tài khoản vĩnh viễn." });
-            TempData["Success"] = "Đã xóa tài khoản vĩnh viễn.";
+            if (isAjax) return Json(new { success = true, message = result.Message });
+            TempData["Success"] = result.Message;
             return RedirectToAction(nameof(Index));
         }
     }

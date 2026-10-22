@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Data;
+using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
+
+// Đăng ký tầng Repository và Service (Clean Architecture / Service-Repository Pattern)
+builder.Services.AddApplicationServices();
 
 // Cấu hình Session (Module 1)
 builder.Services.AddDistributedMemoryCache();

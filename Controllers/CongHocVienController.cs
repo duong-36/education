@@ -6,20 +6,44 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Data;
 using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models;
+using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Repositories.Interfaces;
+using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Services.Interfaces;
 
 namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 {
     public class CongHocVienController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork _uow;
+        private readonly IDangKyHocService _dangKyHocService;
+        private readonly IHocVienService _hocVienService;
+        private readonly ILopHocService _lopHocService;
+        private readonly IBuoiHocService _buoiHocService;
+        private readonly IKetQuaHocTapService _ketQuaService;
+        private readonly IChuongTrinhDaoTaoService _chuongTrinhService;
+        private readonly ITaiKhoanService _taiKhoanService;
 
-        public CongHocVienController(ApplicationDbContext context)
+        public CongHocVienController(
+            IUnitOfWork uow,
+            IDangKyHocService dangKyHocService,
+            IHocVienService hocVienService,
+            ILopHocService lopHocService,
+            IBuoiHocService buoiHocService,
+            IKetQuaHocTapService ketQuaService,
+            IChuongTrinhDaoTaoService chuongTrinhService,
+            ITaiKhoanService taiKhoanService)
         {
-            _context = context;
+            _uow = uow;
+            _dangKyHocService = dangKyHocService;
+            _hocVienService = hocVienService;
+            _lopHocService = lopHocService;
+            _buoiHocService = buoiHocService;
+            _ketQuaService = ketQuaService;
+            _chuongTrinhService = chuongTrinhService;
+            _taiKhoanService = taiKhoanService;
         }
 
         // Helper lấy học viên hiện tại theo Session
@@ -28,18 +52,17 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             int? maHocVien = HttpContext.Session.GetInt32("MaHocVien");
             if (maHocVien.HasValue)
             {
-                var hv = await _context.HocViens.FindAsync(maHocVien.Value);
+                var hv = await _hocVienService.GetByIdAsync(maHocVien.Value);
                 if (hv != null) return hv;
             }
 
             int? maTaiKhoan = HttpContext.Session.GetInt32("MaTaiKhoan");
             if (maTaiKhoan.HasValue)
             {
-                var hv = await _context.HocViens.FirstOrDefaultAsync(h => h.MaTaiKhoan == maTaiKhoan.Value);
+                var hv = await _hocVienService.GetByTaiKhoanIdAsync(maTaiKhoan.Value);
                 if (hv != null) return hv;
             }
 
-            // Khách vãng lai chưa đăng nhập -> trả về null, tuyệt đối không lấy bừa dữ liệu của học viên khác
             return null;
         }
 
@@ -65,12 +88,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 
             ViewBag.CurrentStudent = student;
 
-            var query = _context.LopHocs
+            var query = _uow.LopHocs.Query()
                 .Include(l => l.ChuongTrinhDaoTao)
                 .AsNoTracking()
                 .Where(l => l.TrangThai == "Đang mở đăng ký");
 
-            // 1. Tìm kiếm theo tên lớp học, giảng viên, tên CTĐT
             if (!string.IsNullOrWhiteSpace(search))
             {
                 string kw = search.Trim().ToLower();
@@ -80,19 +102,16 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                     (l.ChuongTrinhDaoTao != null && l.ChuongTrinhDaoTao.TenChuongTrinh.ToLower().Contains(kw)));
             }
 
-            // 2. Lọc theo chuyên ngành / Chương trình đào tạo
             if (maChuongTrinh.HasValue)
             {
                 query = query.Where(l => l.MaChuongTrinh == maChuongTrinh.Value);
             }
 
-            // 3. Lọc theo trình độ đầu vào
             if (!string.IsNullOrWhiteSpace(trinhDo))
             {
                 query = query.Where(l => l.TrinhDoDauVao == trinhDo);
             }
 
-            // 4. Lọc theo khoảng học phí
             if (mucGia == "duoi_3tr")
             {
                 query = query.Where(l => l.HocPhi < 3000000);
@@ -106,7 +125,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 query = query.Where(l => l.HocPhi > 6000000);
             }
 
-            // 5. Sắp xếp E-commerce
             query = sapXep switch
             {
                 "gia_tang" => query.OrderBy(l => l.HocPhi),
@@ -127,47 +145,57 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            // Tính sĩ số đã duyệt cho từng lớp hiển thị
             var classIds = classes.Select(c => c.MaLop).ToList();
-            var siSoMap = await _context.DangKyHocs
+            var siSoMap = await _uow.DangKyHocs.Query()
                 .Where(d => classIds.Contains(d.MaLop) && (d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học"))
                 .GroupBy(d => d.MaLop)
                 .Select(g => new { MaLop = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.MaLop, x => x.Count);
 
-            // Kiểm tra các lớp mà học viên hiện tại đã đăng ký
             var myRegistrations = new Dictionary<int, DangKyHoc>();
-            if (student != null)
-            {
-                var dks = await _context.DangKyHocs
-                    .Where(d => d.MaHocVien == student.MaHocVien && d.TrangThai != "Đã hủy")
-                    .ToListAsync();
-                myRegistrations = dks
-                    .GroupBy(d => d.MaLop)
-                    .ToDictionary(g => g.Key, g => g.OrderByDescending(d => d.MaDangKy).First());
-            }
+            var allMyDks = await _uow.DangKyHocs.Query()
+                .Where(d => d.MaHocVien == student.MaHocVien && d.TrangThai != "Đã hủy")
+                .ToListAsync();
 
-            // Marketplace Stats
-            ViewBag.TongKhoaHoc = await _context.LopHocs.CountAsync(l => l.TrangThai == "Đang mở đăng ký");
-            ViewBag.TongHocVien = await _context.HocViens.CountAsync();
-            ViewBag.TongChuongTrinh = await _context.ChuongTrinhDaoTaos.CountAsync();
+            myRegistrations = allMyDks
+                .GroupBy(d => d.MaLop)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(d => d.MaDangKy).First());
 
+            var chuongTrinhs = await _chuongTrinhService.GetAllAsync();
+            var openCounts = await _uow.LopHocs.Query()
+                .Where(l => l.TrangThai == "Đang mở đăng ký")
+                .GroupBy(l => l.MaChuongTrinh)
+                .Select(g => new { MaChuongTrinh = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.MaChuongTrinh, x => x.Count);
+
+            int totalOpenClasses = await _uow.LopHocs.CountAsync(l => l.TrangThai == "Đang mở đăng ký");
+            int totalEnrolledStudents = await _uow.DangKyHocs.CountAsync(d => d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học");
+            int totalPrograms = await _uow.ChuongTrinhDaoTaos.CountAsync(c => c.TrangThai == "Đang hoạt động");
+
+            ViewBag.ChuongTrinhs = chuongTrinhs;
+            ViewBag.OpenCounts = openCounts;
             ViewBag.SiSoMap = siSoMap;
             ViewBag.MyRegistrations = myRegistrations;
-            ViewBag.ChuongTrinhList = await _context.ChuongTrinhDaoTaos.Where(c => c.TrangThai == "Đang hoạt động").ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
             ViewBag.Search = search;
             ViewBag.SelectedMaChuongTrinh = maChuongTrinh;
             ViewBag.SelectedTrinhDo = trinhDo;
             ViewBag.SelectedMucGia = mucGia;
             ViewBag.SelectedSapXep = sapXep;
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.TotalItems = totalItems;
+
+            ViewBag.TotalOpenClasses = totalOpenClasses;
+            ViewBag.TotalEnrolledStudents = totalEnrolledStudents;
+            ViewBag.TotalPrograms = totalPrograms;
 
             return View(classes);
         }
 
-        // --- TRANG LANDING PAGE CHI TIẾT KHÓA HỌC (COURSE DETAILS & STICKY CTA) ---
+        // --- CHI TIẾT KHÓA HỌC (EDU-COMMERCE PDP) ---
         public async Task<IActionResult> ChiTiet(int id)
         {
             var student = await GetCurrentHocVienAsync();
@@ -178,35 +206,21 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             }
             ViewBag.CurrentStudent = student;
 
-            var lop = await _context.LopHocs
-                .Include(l => l.ChuongTrinhDaoTao)
-                .FirstOrDefaultAsync(l => l.MaLop == id);
-
+            var lop = await _lopHocService.GetDetailsAsync(id);
             if (lop == null) return NotFound();
 
-            // Danh sách buổi học chi tiết
-            var buoiHocs = await _context.BuoiHocs
-                .Where(b => b.MaLop == id && b.TrangThai != "Đã hủy")
-                .OrderBy(b => b.ThoiGianBatDau)
-                .ToListAsync();
+            var buoiHocs = await _buoiHocService.GetByLopHocAsync(id);
 
-            // Sĩ số đã tiếp nhận
-            int enrolledCount = await _context.DangKyHocs.CountAsync(d =>
+            int enrolledCount = await _uow.DangKyHocs.CountAsync(d =>
                 d.MaLop == id &&
                 (d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học"));
 
-            // Đơn đăng ký của học viên hiện tại nếu có
-            DangKyHoc myReg = null;
-            if (student != null)
-            {
-                myReg = await _context.DangKyHocs
-                    .Where(d => d.MaHocVien == student.MaHocVien && d.MaLop == id && d.TrangThai != "Đã hủy")
-                    .OrderByDescending(d => d.MaDangKy)
-                    .FirstOrDefaultAsync();
-            }
+            DangKyHoc? myReg = await _uow.DangKyHocs.Query()
+                .Where(d => d.MaHocVien == student.MaHocVien && d.MaLop == id && d.TrangThai != "Đã hủy")
+                .OrderByDescending(d => d.MaDangKy)
+                .FirstOrDefaultAsync();
 
-            // Các khóa học tương tự cùng chương trình đào tạo
-            var similarCourses = await _context.LopHocs
+            var similarCourses = await _uow.LopHocs.Query()
                 .Where(l => l.MaChuongTrinh == lop.MaChuongTrinh && l.MaLop != id && l.TrangThai == "Đang mở đăng ký")
                 .Take(3)
                 .ToListAsync();
@@ -232,13 +246,13 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 return Json(new { success = false, requireLogin = true, message = "Bạn cần đăng nhập hoặc đăng ký tài khoản học viên để thực hiện đăng ký khóa học." });
             }
 
-            var lop = await _context.LopHocs.FindAsync(maLop);
+            var lop = await _lopHocService.GetByIdAsync(maLop);
             if (lop == null)
             {
                 return Json(new { success = false, message = "Lớp học không tồn tại." });
             }
 
-            if (lop.TrangThai != "Đang mở đăng ký")
+            if (lop.TrangThai != "Đang mở đăng ký" && lop.TrangThai != "Mở đăng ký")
             {
                 return Json(new { success = false, message = "Lớp học này hiện không mở tuyển sinh." });
             }
@@ -248,8 +262,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 return Json(new { success = false, message = "Lớp học đã hết thời hạn đăng ký." });
             }
 
-            // Kiểm tra đã đăng ký chưa
-            var existing = await _context.DangKyHocs
+            var existing = await _uow.DangKyHocs.Query()
                 .FirstOrDefaultAsync(d => d.MaHocVien == student.MaHocVien && d.MaLop == maLop && d.TrangThai != "Đã hủy");
 
             if (existing != null)
@@ -257,8 +270,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 return Json(new { success = false, message = $"Bạn đã đăng ký khóa học này rồi (Trạng thái: {existing.TrangThai})." });
             }
 
-            // Kiểm tra sĩ số còn chỗ
-            int enrolledCount = await _context.DangKyHocs.CountAsync(d =>
+            int enrolledCount = await _uow.DangKyHocs.CountAsync(d =>
                 d.MaLop == maLop &&
                 (d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học"));
 
@@ -277,8 +289,8 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 SoTienDaDong = 0
             };
 
-            _context.DangKyHocs.Add(dangKy);
-            await _context.SaveChangesAsync();
+            await _uow.DangKyHocs.AddAsync(dangKy);
+            await _uow.CompleteAsync();
 
             return Json(new
             {
@@ -295,10 +307,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             var student = await GetCurrentHocVienAsync();
             if (student == null) return Json(new { success = false, message = "Chưa xác thực học viên." });
 
-            var dk = await _context.DangKyHocs
-                .Include(d => d.LopHoc)
-                .FirstOrDefaultAsync(d => d.MaDangKy == maDangKy);
-
+            var dk = await _dangKyHocService.GetDetailsAsync(maDangKy);
             if (dk == null) return Json(new { success = false, message = "Không tìm thấy hồ sơ đăng ký." });
 
             if (dk.MaHocVien != student.MaHocVien)
@@ -306,14 +315,14 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 return Json(new { success = false, message = "Bạn không có quyền thao tác trên hồ sơ của người khác." });
             }
 
-            // Chỉ cho hủy khi còn Chờ duyệt hoặc Đã duyệt mà chưa đóng tiền
             if (dk.TrangThai == "Đã đóng học phí" || dk.TrangThai == "Đang học" || dk.TrangThai == "Hoàn thành")
             {
                 return Json(new { success = false, message = $"Không thể hủy lớp khi đã ở trạng thái '{dk.TrangThai}'. Vui lòng liên hệ ban giáo vụ để được hỗ trợ bảo lưu." });
             }
 
             dk.TrangThai = "Đã hủy";
-            await _context.SaveChangesAsync();
+            _uow.DangKyHocs.Update(dk);
+            await _uow.CompleteAsync();
 
             return Json(new { success = true, message = $"Đã hủy đăng ký lớp '{dk.LopHoc?.TenLop}' thành công." });
         }
@@ -330,8 +339,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 
             ViewBag.CurrentStudent = student;
 
-            // 1. Lấy danh sách các lớp học viên đang theo học hoặc đã đóng phí
-            var myEnrolled = await _context.DangKyHocs
+            var myEnrolled = await _uow.DangKyHocs.Query()
                 .Include(d => d.LopHoc)
                     .ThenInclude(l => l.ChuongTrinhDaoTao)
                 .Where(d => d.MaHocVien == student.MaHocVien && 
@@ -341,13 +349,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             ViewBag.MyEnrolledClasses = myEnrolled;
             var activeClassIds = myEnrolled.Select(d => d.MaLop).ToList();
 
-            // 2. Xác định ngày trung tâm để tính tuần
             DateTime targetDate = ngay ?? new DateTime(2026, 10, 22);
 
-            // Nếu chọn 1 lớp cụ thể và chưa truyền ngày, ưu tiên lấy ngày có buổi học gần ngày hôm nay nhất của lớp đó
             if (maLop.HasValue && !ngay.HasValue)
             {
-                var nearSession = await _context.BuoiHocs
+                var nearSession = await _uow.BuoiHocs.Query()
                     .Where(b => b.MaLop == maLop.Value && b.TrangThai != "Đã hủy")
                     .OrderBy(b => Math.Abs(EF.Functions.DateDiffDay(b.ThoiGianBatDau, DateTime.Today)))
                     .FirstOrDefaultAsync();
@@ -358,7 +364,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 }
             }
 
-            // 3. Tính toán Thứ 2 đầu tuần và Chủ nhật cuối tuần
             int diff = (7 + (targetDate.DayOfWeek - DayOfWeek.Monday)) % 7;
             DateTime monday = targetDate.Date.AddDays(-diff);
             DateTime sunday = monday.AddDays(6).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
@@ -379,12 +384,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             LopHoc? selectedLop = null;
             if (maLop.HasValue)
             {
-                selectedLop = await _context.LopHocs.FindAsync(maLop.Value);
+                selectedLop = await _lopHocService.GetByIdAsync(maLop.Value);
             }
             ViewBag.SelectedLop = selectedLop;
 
-            // 4. Lọc các buổi học trong tuần
-            var query = _context.BuoiHocs
+            var query = _uow.BuoiHocs.Query()
                 .Include(b => b.LopHoc)
                     .ThenInclude(l => l.ChuongTrinhDaoTao)
                 .Where(b => b.ThoiGianBatDau >= monday && b.ThoiGianBatDau <= sunday && b.TrangThai != "Đã hủy");
@@ -395,7 +399,6 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             }
             else
             {
-                // Mặc định hiển thị tất cả các lớp mà học viên đang theo học
                 query = query.Where(b => activeClassIds.Contains(b.MaLop));
             }
 
@@ -415,7 +418,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             return View(sessions);
         }
 
-        // --- KHÔNG GIAN HỌC TẬP CỦA TÔI (MY LEARNING DASHBOARD) ---
+        // --- TIẾN TRÌNH HỌC TẬP & BẢNG ĐIỂM (PERSONALIZED DASHBOARD) ---
         public async Task<IActionResult> TienTrinh()
         {
             var student = await GetCurrentHocVienAsync();
@@ -427,39 +430,31 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 
             ViewBag.CurrentStudent = student;
 
-            // Danh sách các đăng ký của học viên
-            var dangKys = await _context.DangKyHocs
+            var dangKys = await _uow.DangKyHocs.Query()
                 .Include(d => d.LopHoc)
                     .ThenInclude(l => l.ChuongTrinhDaoTao)
                 .Where(d => d.MaHocVien == student.MaHocVien)
                 .OrderByDescending(d => d.NgayDangKy)
                 .ToListAsync();
 
-            // Danh sách các lớp học viên đang học hoặc đã đóng phí để lấy lịch học
             var activeClassIds = dangKys
                 .Where(d => d.TrangThai == "Đã duyệt" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đang học")
                 .Select(d => d.MaLop)
                 .ToList();
 
-            var buoiHocs = await _context.BuoiHocs
+            var buoiHocs = await _uow.BuoiHocs.Query()
                 .Include(b => b.LopHoc)
                 .Where(b => activeClassIds.Contains(b.MaLop) && b.TrangThai != "Đã hủy")
                 .OrderBy(b => b.ThoiGianBatDau)
                 .ToListAsync();
 
-            // Đếm số buổi đã hoàn thành cho từng lớp để tính tiến độ %
-            var completedSessionsCount = await _context.BuoiHocs
+            var completedSessionsCount = await _uow.BuoiHocs.Query()
                 .Where(b => activeClassIds.Contains(b.MaLop) && b.TrangThai == "Đã hoàn thành")
                 .GroupBy(b => b.MaLop)
                 .Select(g => new { MaLop = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.MaLop, x => x.Count);
 
-            // Bảng điểm cá nhân
-            var ketQuas = await _context.KetQuaHocTaps
-                .Include(k => k.DangKyHoc)
-                    .ThenInclude(d => d.LopHoc)
-                .Where(k => k.DangKyHoc != null && k.DangKyHoc.MaHocVien == student.MaHocVien)
-                .ToListAsync();
+            var ketQuas = await _ketQuaService.GetByHocVienAsync(student.MaHocVien);
 
             ViewBag.BuoiHocs = buoiHocs;
             ViewBag.CompletedSessionsCount = completedSessionsCount;
@@ -478,11 +473,10 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 return RedirectToAction("Login", "TaiKhoan", new { returnUrl = "/CongHocVien/HoSo" });
             }
 
-            var tk = await _context.TaiKhoans.FindAsync(student.MaTaiKhoan);
+            var tk = await _taiKhoanService.GetByIdAsync(student.MaTaiKhoan);
             ViewBag.TaiKhoan = tk;
 
-            // Lịch sử thanh toán học phí
-            var paymentHistory = await _context.DangKyHocs
+            var paymentHistory = await _uow.DangKyHocs.Query()
                 .Include(d => d.LopHoc)
                 .Where(d => d.MaHocVien == student.MaHocVien && d.SoTienDaDong > 0)
                 .OrderByDescending(d => d.NgayDongHocPhi)
@@ -512,16 +506,16 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             student.TrinhDoHocVan = model.TrinhDoHocVan;
             student.NgheNghiep = model.NgheNghiep;
 
-            // Đồng bộ tên sang tài khoản
-            var tk = await _context.TaiKhoans.FindAsync(student.MaTaiKhoan);
-            if (tk != null)
+            var result = await _hocVienService.UpdateStudentAsync(student);
+
+            if (!result.Success)
             {
-                tk.HoTen = model.HoTen;
+                return Json(new { success = false, message = result.Message });
             }
 
-            await _context.SaveChangesAsync();
+            HttpContext.Session.SetString("HoTen", student.HoTen);
 
-            return Json(new { success = true, message = "Cập nhật thông tin cá nhân thành công!" });
+            return Json(new { success = true, message = "Cập nhật thông tin hồ sơ cá nhân thành công!" });
         }
     }
 }
