@@ -2,8 +2,8 @@
 @{
     // Họ và tên: [Tên SV3]
     // Mã sinh viên: [Mã SV3]
-    // Nội dung thực hiện: Cổng Học viên - Đăng ký Lớp học (Module 3) - Phong cách Prep.vn
-    ViewData["Title"] = "Cổng Đăng Ký Học Phần";
+    // Nội dung thực hiện: Marketplace Khóa Học (Storefront Edu-Commerce) - Cổng Học viên
+    ViewData["Title"] = "Khám Phá Khóa Học Thực Chiến";
     var currentStudent = ViewBag.CurrentStudent as QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.HocVien;
     var chuongTrinhList = ViewBag.ChuongTrinhList as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.ChuongTrinhDaoTao> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.ChuongTrinhDaoTao>();
     var siSoMap = ViewBag.SiSoMap as Dictionary<int, int> ?? new Dictionary<int, int>();
@@ -11,239 +11,518 @@
     string search = ViewBag.Search ?? "";
     int? selectedMaCT = ViewBag.SelectedMaChuongTrinh;
     string selectedTrinhDo = ViewBag.SelectedTrinhDo ?? "";
+    string selectedMucGia = ViewBag.SelectedMucGia ?? "";
+    string selectedSapXep = ViewBag.SelectedSapXep ?? "";
+
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
 }
 
-<div class="flex flex-col gap-y-6">
-    <!-- Sub-header Navigation Bar -->
-    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-standard">
-        <div>
-            <div class="flex items-center gap-2 text-outline font-label-sm text-label-sm uppercase tracking-wider mb-1">
-                <span>CỔNG HỌC VIÊN</span>
-                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-                <span class="text-brand-deep font-semibold">ĐĂNG KÝ HỌC PHẦN</span>
+<!-- ================= HERO SECTION BANNER ================= -->
+<section class="relative bg-gradient-to-br from-brand-deep via-[#002773] to-primary text-white overflow-hidden py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
+    <!-- Background Abstract Glow Shapes -->
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/30 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-accent-orange/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-white">
+                    <span class="w-2 h-2 rounded-full bg-accent-orange animate-ping"></span>
+                    <span>Tuyển Sinh Khóa Học Mới 2024 - 2025</span>
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
+                    Học Kỹ Năng Thực Chiến <br class="hidden sm:inline"/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-300 to-yellow-200">
+                        Bứt Phá Thu Nhập Cùng Doanh Nghiệp
+                    </span>
+                </h1>
+                <p class="text-slate-200 text-sm sm:text-base max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
+                    Chương trình đào tạo chuyên sâu được cố vấn trực tiếp bởi giảng viên và kỹ sư hàng đầu. Chứng chỉ giá trị từ Đại học Kinh tế - Kỹ thuật Công nghiệp (UNETI).
+                </p>
+
+                <!-- Search form in Hero -->
+                <form action="/CongHocVien/DangKy" method="get" class="max-w-xl mx-auto lg:mx-0 flex items-center bg-white rounded-2xl p-1.5 shadow-xl border border-white/20">
+                    <span class="material-symbols-outlined text-outline text-[22px] ml-3 shrink-0">search</span>
+                    <input type="text" name="search" value="@search" placeholder="Nhập tên khóa học, ngôn ngữ lập trình, giảng viên..."
+                           class="w-full px-3 py-2 text-xs sm:text-sm text-slate-800 placeholder:text-outline focus:outline-none bg-transparent" />
+                    <button type="submit" class="bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold px-5 sm:px-6 py-2.5 rounded-xl shadow-md transition-all shrink-0">
+                        Khám phá ngay
+                    </button>
+                </form>
+
+                <!-- Trust Stats -->
+                <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/10 max-w-lg mx-auto lg:mx-0 text-left">
+                    <div>
+                        <span class="text-xl sm:text-2xl font-black text-amber-300 block">@ViewBag.TongKhoaHoc+</span>
+                        <span class="text-[11px] text-slate-300 font-medium">Lớp đang mở tuyển</span>
+                    </div>
+                    <div>
+                        <span class="text-xl sm:text-2xl font-black text-amber-300 block">@ViewBag.TongHocVien+</span>
+                        <span class="text-[11px] text-slate-300 font-medium">Học viên tin chọn</span>
+                    </div>
+                    <div>
+                        <span class="text-xl sm:text-2xl font-black text-amber-300 block">100%</span>
+                        <span class="text-[11px] text-slate-300 font-medium">Thực hành thực tế</span>
+                    </div>
+                </div>
             </div>
-            <h1 class="font-headline-md text-headline-md text-brand-deep font-bold tracking-tight">
-                Các Lớp Học Đang Mở Đăng Ký
-            </h1>
+
+            <!-- Hero Right Card Banner -->
+            <div class="lg:col-span-5 hidden lg:block">
+                <div class="relative bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-2xl space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                        </div>
+                        <span class="text-xs font-mono text-amber-300 font-bold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">local_fire_department</span> FLASH RECRUITMENT
+                        </span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-2xl bg-white/15 border border-white/10 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0">
+                                <span class="material-symbols-outlined text-[20px]">code</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-xs font-bold text-white truncate">Lập trình Web ASP.NET Core MVC 10</h4>
+                                <span class="text-[11px] text-slate-300">Giảm 10% học phí khi đăng ký sớm</span>
+                            </div>
+                            <span class="text-xs font-bold text-amber-300 font-mono shrink-0">Hot</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white/15 border border-white/10 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">
+                                <span class="material-symbols-outlined text-[20px]">analytics</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-xs font-bold text-white truncate">Khoa học Dữ liệu & AI với Python</h4>
+                                <span class="text-[11px] text-slate-300">Được kèm cặp bởi Chuyên gia AI</span>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-300 font-mono shrink-0">Mới</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 text-center text-xs text-slate-300">
+                        ✨ Cam kết hoàn 100% học phí trong 7 ngày nếu không hài lòng
+                    </div>
+                </div>
+            </div>
         </div>
-
-        @if (currentStudent != null)
-        {
-            <div class="flex items-center gap-2.5 bg-surface-white px-4 py-2 rounded-xl border border-border-subtle shadow-xs">
-                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
-                    @(string.IsNullOrWhiteSpace(currentStudent.HoTen) ? "HV" : currentStudent.HoTen.Substring(0, 1).ToUpper())
-                </div>
-                <div class="text-xs">
-                    <span class="text-outline block text-[11px]">Đang đăng ký dưới tên:</span>
-                    <strong class="text-brand-deep">@currentStudent.HoTen</strong>
-                    <span class="text-outline font-mono text-[10px]">#HV@currentStudent.MaHocVien.ToString("D3")</span>
-                </div>
-            </div>
-        }
-    </section>
-
-    <!-- Filters & Search Toolbar -->
-    <div class="bg-surface-white rounded-2xl p-4 border border-border-subtle shadow-[0_2px_12px_rgba(0,22,86,0.03)] flex flex-wrap items-center justify-between gap-3">
-        <form method="get" class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-            <!-- Search Input -->
-            <div class="relative flex-1 min-w-[220px]">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">search</span>
-                <input type="text" name="search" value="@search" placeholder="Tìm kiếm theo tên khóa học, giảng viên..."
-                       class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep" />
-            </div>
-
-            <!-- Filter CTĐT -->
-            <div class="min-w-[180px]">
-                <select name="maChuongTrinh" onchange="this.form.submit()" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
-                    <option value="">Tất cả chương trình</option>
-                    @foreach (var ct in chuongTrinhList)
-                    {
-                        <!option value="@ct.MaChuongTrinh" @(selectedMaCT == ct.MaChuongTrinh ? "selected" : "")>@ct.TenChuongTrinh</!option>
-                    }
-                </select>
-            </div>
-
-            <!-- Filter Trình độ -->
-            <div class="min-w-[140px]">
-                <select name="trinhDo" onchange="this.form.submit()" class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep">
-                    <option value="">Tất cả trình độ</option>
-                    <!option value="Cơ bản" @(selectedTrinhDo == "Cơ bản" ? "selected" : "")>Cơ bản</!option>
-                    <!option value="Nâng cao" @(selectedTrinhDo == "Nâng cao" ? "selected" : "")>Nâng cao</!option>
-                    <!option value="Chuyên sâu" @(selectedTrinhDo == "Chuyên sâu" ? "selected" : "")>Chuyên sâu</!option>
-                </select>
-            </div>
-
-            <button type="submit" class="bg-primary hover:bg-[#0047b3] text-surface-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
-                Lọc
-            </button>
-            <a asp-action="DangKy" class="text-xs text-outline hover:text-primary font-medium px-2 py-2">Đặt lại</a>
-        </form>
     </div>
+</section>
 
-    <!-- Cards Grid -->
-    @if (!Model.Any())
-    {
-        <div class="bg-surface-white rounded-2xl border border-border-subtle p-12 text-center text-outline shadow-xs">
-            <span class="material-symbols-outlined text-[48px] opacity-40 mb-2 text-primary">menu_book</span>
-            <h3 class="text-base font-bold text-brand-deep mb-1">Hiện không có lớp học nào khả dụng</h3>
-            <p class="text-xs max-w-md mx-auto">Vui lòng thử lại với các tiêu chí tìm kiếm khác hoặc quay lại sau khi có đợt tuyển sinh mới.</p>
-        </div>
-    }
-    else
-    {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach (var lop in Model)
+<!-- ================= QUICK CATEGORY CHIPS ================= -->
+<div class="bg-white border-b border-border-standard sticky top-20 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+        <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar whitespace-nowrap">
+            <span class="text-xs font-bold text-outline uppercase tracking-wider mr-2 shrink-0">Chuyên ngành:</span>
+            
+            <a href="/CongHocVien/DangKy"
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all @(!selectedMaCT.HasValue ? "bg-primary text-white shadow-xs" : "bg-slate-100 text-slate-700 hover:bg-slate-200")">
+                Tất cả (@totalItems)
+            </a>
+
+            @foreach (var ct in chuongTrinhList)
             {
-                int currentEnrolled = siSoMap.ContainsKey(lop.MaLop) ? siSoMap[lop.MaLop] : 0;
-                int maxCapacity = lop.SiSoToiDa;
-                int remainingSeats = Math.Max(0, maxCapacity - currentEnrolled);
-                double fillPercent = maxCapacity > 0 ? Math.Min(100.0, Math.Round((double)currentEnrolled / maxCapacity * 100, 1)) : 0;
-                bool isFull = remainingSeats <= 0;
-                bool isExpired = lop.HanDangKy < DateTime.Today;
-                bool isRegistered = myRegistrations.ContainsKey(lop.MaLop);
-                string myStatus = isRegistered ? myRegistrations[lop.MaLop].TrangThai : "";
-
-                <div class="bg-surface-white rounded-2xl border border-border-subtle hover:border-primary/40 p-5 shadow-[0_2px_12px_rgba(0,22,86,0.03)] hover:shadow-md transition-all flex flex-col justify-between group">
-                    <div>
-                        <!-- Top Header of Card -->
-                        <div class="flex items-start justify-between gap-2 mb-3">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                @lop.TrinhDoDauVao
-                            </span>
-                            <span class="font-mono text-xs font-bold text-emerald-700">
-                                @lop.HocPhi.ToString("N0") đ
-                            </span>
-                        </div>
-
-                        <!-- Class Name -->
-                        <h3 class="font-bold text-base text-brand-deep group-hover:text-primary transition-colors mb-1 line-clamp-2">
-                            @lop.TenLop
-                        </h3>
-                        <p class="text-xs text-outline mb-4">
-                            @(lop.ChuongTrinhDaoTao?.TenChuongTrinh ?? "Chương trình chuyên biệt")
-                        </p>
-
-                        <!-- Key Specs -->
-                        <div class="space-y-2 text-xs border-y border-border-subtle py-3 mb-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-outline flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[15px] text-primary">person</span>
-                                    Giảng viên:
-                                </span>
-                                <span class="font-semibold text-brand-deep">@lop.GiangVien</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-outline flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[15px] text-primary">event_available</span>
-                                    Khai giảng:
-                                </span>
-                                <span class="font-mono font-medium text-brand-deep">@lop.NgayKhaiGiang.ToString("dd/MM/yyyy")</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-outline flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
-                                    Thời lượng:
-                                </span>
-                                <span class="font-mono font-medium text-brand-deep">@lop.SoBuoiHoc buổi</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-outline flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[15px] text-rose-500">alarm</span>
-                                    Hạn đăng ký:
-                                </span>
-                                <span class="font-mono font-medium @(isExpired ? "text-rose-600" : "text-brand-deep")">
-                                    @lop.HanDangKy.ToString("dd/MM/yyyy")
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Capacity Bar -->
-                        <div class="mb-4">
-                            <div class="flex items-center justify-between text-[11px] mb-1">
-                                <span class="text-outline">Chỉ tiêu: <strong class="text-brand-deep font-mono">@currentEnrolled / @maxCapacity</strong></span>
-                                <span class="font-bold @(isFull ? "text-rose-600" : "text-primary")">
-                                    @(isFull ? "Hết chỗ" : $"Còn {remainingSeats} chỗ")
-                                </span>
-                            </div>
-                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                                <div class="h-2 rounded-full transition-all duration-300 @(fillPercent >= 100 ? "bg-rose-500" : fillPercent >= 80 ? "bg-amber-500" : "bg-primary")"
-                                     style="width: @fillPercent%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Button -->
-                    <div>
-                        @if (isRegistered)
-                        {
-                            <div class="w-full py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5">
-                                <span class="material-symbols-outlined text-[18px]">verified</span>
-                                <span>Đã đăng ký (@myStatus)</span>
-                            </div>
-                        }
-                        else if (isExpired)
-                        {
-                            <button disabled class="w-full py-2.5 px-3 rounded-xl bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed">
-                                Đã hết hạn đăng ký
-                            </button>
-                        }
-                        else if (isFull)
-                        {
-                            <button disabled class="w-full py-2.5 px-3 rounded-xl bg-rose-50 text-rose-400 text-xs font-semibold cursor-not-allowed">
-                                Lớp đã đủ sĩ số
-                            </button>
-                        }
-                        else
-                        {
-                            <button onclick="openRegisterModal(@lop.MaLop, '@lop.TenLop.Replace("'", "\\'")')" class="w-full py-2.5 px-3 rounded-xl bg-primary hover:bg-[#0047b3] text-surface-white text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5 cursor-pointer">
-                                <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
-                                <span>Đăng ký ngay</span>
-                            </button>
-                        }
-                    </div>
-                </div>
+                <a href="/CongHocVien/DangKy?maChuongTrinh=@ct.MaChuongTrinh"
+                   class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all @(selectedMaCT == ct.MaChuongTrinh ? "bg-primary text-white shadow-xs" : "bg-slate-100 text-slate-700 hover:bg-slate-200")">
+                    @ct.TenChuongTrinh
+                </a>
             }
         </div>
-    }
+    </div>
 </div>
 
-<!-- Register Modal -->
-<div id="register-modal" class="fixed inset-0 bg-brand-deep/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
-    <div class="bg-surface-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="register-modal-content">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span class="material-symbols-outlined text-[24px]">school</span>
+<!-- ================= MAIN STOREFRONT CATALOG ================= -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- LEFT FACETED FILTER SIDEBAR -->
+        <aside class="space-y-6">
+            <div class="bg-white rounded-2xl p-5 border border-border-standard shadow-xs space-y-6">
+                <div class="flex items-center justify-between pb-3 border-b border-border-standard">
+                    <h3 class="text-sm font-bold text-brand-deep flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px] text-primary">tune</span>
+                        <span>Bộ lọc tìm kiếm</span>
+                    </h3>
+                    <a href="/CongHocVien/DangKy" class="text-xs text-outline hover:text-primary transition-colors">
+                        Đặt lại
+                    </a>
+                </div>
+
+                <form id="filterForm" action="/CongHocVien/DangKy" method="get" class="space-y-5">
+                    @if (!string.IsNullOrEmpty(search))
+                    {
+                        <input type="hidden" name="search" value="@search" />
+                    }
+
+                    <!-- Filter 1: Chương trình đào tạo -->
+                    <div>
+                        <label class="block text-xs font-bold text-brand-deep uppercase tracking-wider mb-2.5">Chương trình đào tạo</label>
+                        <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="maChuongTrinh" value="" onchange="this.form.submit()" @(!selectedMaCT.HasValue ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Tất cả chương trình</span>
+                            </label>
+                            @foreach (var ct in chuongTrinhList)
+                            {
+                                <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                    <input type="radio" name="maChuongTrinh" value="@ct.MaChuongTrinh" onchange="this.form.submit()" @(selectedMaCT == ct.MaChuongTrinh ? "checked" : "")
+                                           class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                    <span class="truncate">@ct.TenChuongTrinh</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Filter 2: Trình độ đầu vào -->
+                    <div class="pt-4 border-t border-border-standard">
+                        <label class="block text-xs font-bold text-brand-deep uppercase tracking-wider mb-2.5">Trình độ đầu vào</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="trinhDo" value="" onchange="this.form.submit()" @(string.IsNullOrEmpty(selectedTrinhDo) ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Tất cả trình độ</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="trinhDo" value="Cơ bản" onchange="this.form.submit()" @(selectedTrinhDo == "Cơ bản" ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Cơ bản (Người mới bắt đầu)</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="trinhDo" value="Nâng cao" onchange="this.form.submit()" @(selectedTrinhDo == "Nâng cao" ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Nâng cao (Đã có kiến thức nền)</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="trinhDo" value="Chuyên sâu" onchange="this.form.submit()" @(selectedTrinhDo == "Chuyên sâu" ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Chuyên sâu (Chuyên gia/Doanh nghiệp)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Filter 3: Mức học phí -->
+                    <div class="pt-4 border-t border-border-standard">
+                        <label class="block text-xs font-bold text-brand-deep uppercase tracking-wider mb-2.5">Khoảng học phí</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="mucGia" value="" onchange="this.form.submit()" @(string.IsNullOrEmpty(selectedMucGia) ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Tất cả mức giá</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="mucGia" value="duoi_3tr" onchange="this.form.submit()" @(selectedMucGia == "duoi_3tr" ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Dưới 3.000.000 đ</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="mucGia" value="3tr_6tr" onchange="this.form.submit()" @(selectedMucGia == "3tr_6tr" ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>3.000.000 đ - 6.000.000 đ</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 hover:text-primary cursor-pointer">
+                                <input type="radio" name="mucGia" value="tren_6tr" onchange="this.form.submit()" @(selectedMucGia == "tren_6tr" ? "checked" : "")
+                                       class="text-primary focus:ring-primary h-3.5 w-3.5" />
+                                <span>Trên 6.000.000 đ</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div>
-                <h3 class="font-bold text-base text-brand-deep">Xác Nhận Đăng Ký Lớp Học</h3>
-                <p class="text-xs text-outline" id="modal-class-name">Lớp học...</p>
+
+            <!-- Guarantee Banner Widget -->
+            <div class="bg-gradient-to-br from-primary-light to-blue-50 border border-primary/20 rounded-2xl p-5 space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[20px]">verified_user</span>
+                </div>
+                <h4 class="text-xs font-bold text-brand-deep">Cam Kết Chuẩn Đầu Ra</h4>
+                <p class="text-[11px] text-outline leading-relaxed">
+                    Học viên được hỗ trợ thi lấy chứng chỉ quốc tế và kết nối việc làm tại các doanh nghiệp đối tác hàng đầu của UNETI.
+                </p>
             </div>
+        </aside>
+
+        <!-- RIGHT COURSE GRID -->
+        <main class="lg:col-span-3 space-y-6">
+            <!-- Top Controls Toolbar -->
+            <div class="bg-white rounded-2xl p-4 border border-border-standard shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs text-outline">
+                    Hiển thị <strong class="text-brand-deep">@Model.Count()</strong> trên tổng số <strong class="text-brand-deep">@totalItems</strong> khóa học mở tuyển sinh
+                </div>
+
+                <!-- Sort Control -->
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-outline shrink-0">Sắp xếp theo:</span>
+                    <select onchange="location.href = updateQueryParam('sapXep', this.value)"
+                            class="px-3 py-1.5 rounded-xl border border-border-standard bg-slate-50 focus:bg-white text-xs font-semibold text-brand-deep focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <!option value="" @(string.IsNullOrEmpty(selectedSapXep) ? "selected" : "")>Mới nhất</!option>
+                        <!option value="khai_giang_som" @(selectedSapXep == "khai_giang_som" ? "selected" : "")>Khai giảng sớm nhất</!option>
+                        <!option value="gia_tang" @(selectedSapXep == "gia_tang" ? "selected" : "")>Học phí: Thấp đến cao</!option>
+                        <!option value="gia_giam" @(selectedSapXep == "gia_giam" ? "selected" : "")>Học phí: Cao đến thấp</!option>
+                    </select>
+                </div>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="bg-white rounded-3xl border border-border-standard p-12 text-center text-outline shadow-xs space-y-3">
+                    <span class="material-symbols-outlined text-[54px] text-primary/40">sentiment_dissatisfied</span>
+                    <h3 class="text-base font-bold text-brand-deep">Không tìm thấy khóa học phù hợp</h3>
+                    <p class="text-xs max-w-md mx-auto">Vui lòng thử bỏ bớt điều kiện lọc hoặc nhập từ khóa tìm kiếm khác.</p>
+                    <a href="/CongHocVien/DangKy" class="inline-block px-5 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-xs hover:bg-primary-hover transition-colors">
+                        Xem tất cả khóa học
+                    </a>
+                </div>
+            }
+            else
+            {
+                <!-- Course Product Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach (var lop in Model)
+                    {
+                        int currentEnrolled = siSoMap.ContainsKey(lop.MaLop) ? siSoMap[lop.MaLop] : 0;
+                        int maxCapacity = lop.SiSoToiDa;
+                        int remainingSeats = Math.Max(0, maxCapacity - currentEnrolled);
+                        double fillPercent = maxCapacity > 0 ? Math.Min(100.0, Math.Round((double)currentEnrolled / maxCapacity * 100, 1)) : 0;
+                        bool isFull = remainingSeats <= 0;
+                        bool isExpired = lop.HanDangKy < DateTime.Today;
+                        bool isRegistered = myRegistrations.ContainsKey(lop.MaLop);
+                        string myStatus = isRegistered ? myRegistrations[lop.MaLop].TrangThai : "";
+
+                        // Random visual themes for card thumbnail
+                        string[] gradients = new string[] {
+                            "from-blue-600 to-indigo-800",
+                            "from-purple-600 to-brand-deep",
+                            "from-teal-600 to-blue-800",
+                            "from-orange-500 to-rose-700"
+                        };
+                        string gradient = gradients[lop.MaLop % gradients.Length];
+
+                        <div class="bg-white rounded-3xl border border-border-standard hover:border-primary/50 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+                            <!-- Card Thumbnail / Cover -->
+                            <div class="relative h-44 bg-gradient-to-tr @gradient p-5 flex flex-col justify-between text-white overflow-hidden">
+                                <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform"></div>
+                                
+                                <div class="flex items-center justify-between relative z-10">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-white/20 backdrop-blur-md uppercase tracking-wider border border-white/20">
+                                        @lop.TrinhDoDauVao
+                                    </span>
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-900 shadow-sm flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[13px]">star</span> 4.9 (120+)
+                                    </span>
+                                </div>
+
+                                <div class="relative z-10 space-y-1">
+                                    <span class="text-[11px] text-white/80 block uppercase tracking-wider font-semibold">
+                                        @(lop.ChuongTrinhDaoTao?.TenChuongTrinh ?? "Chứng chỉ nghề nghiệp")
+                                    </span>
+                                    <h3 class="text-base font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200 transition-colors">
+                                        @lop.TenLop
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                                <div class="space-y-3">
+                                    <!-- Instructor & Key specs -->
+                                    <div class="flex items-center justify-between text-xs text-outline pb-3 border-b border-border-standard">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-[10px]">
+                                                @(string.IsNullOrWhiteSpace(lop.GiangVien) ? "GV" : lop.GiangVien.Substring(0, 1))
+                                            </div>
+                                            <span class="font-medium text-brand-deep truncate max-w-[110px]">@lop.GiangVien</span>
+                                        </div>
+                                        <span class="flex items-center gap-1 font-mono">
+                                            <span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
+                                            @lop.SoBuoiHoc buổi
+                                        </span>
+                                    </div>
+
+                                    <!-- Date info -->
+                                    <div class="space-y-1 text-xs">
+                                        <div class="flex items-center justify-between text-outline">
+                                            <span>Khai giảng:</span>
+                                            <strong class="text-brand-deep font-mono">@lop.NgayKhaiGiang.ToString("dd/MM/yyyy")</strong>
+                                        </div>
+                                        <div class="flex items-center justify-between text-outline">
+                                            <span>Hạn đăng ký:</span>
+                                            <span class="font-mono @(isExpired ? "text-rose-600 font-bold" : "text-brand-deep")">
+                                                @lop.HanDangKy.ToString("dd/MM/yyyy")
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Urgency Seats Bar -->
+                                    <div class="pt-1">
+                                        <div class="flex items-center justify-between text-[11px] mb-1.5">
+                                            <span class="text-outline">Chỉ tiêu: <strong class="text-brand-deep font-mono">@currentEnrolled / @maxCapacity</strong></span>
+                                            <span class="font-bold @(isFull ? "text-rose-600" : remainingSeats <= 5 ? "text-amber-600 animate-pulse" : "text-emerald-600")">
+                                                @(isFull ? "Đã hết chỗ" : $"Còn {remainingSeats} chỗ trống")
+                                            </span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="h-1.5 rounded-full transition-all duration-300 @(fillPercent >= 100 ? "bg-rose-500" : fillPercent >= 80 ? "bg-amber-500" : "bg-primary")"
+                                                 style="width: @fillPercent%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Price & Actions -->
+                                <div class="pt-3 border-t border-border-standard space-y-3">
+                                    <div class="flex items-baseline justify-between">
+                                        <span class="text-[11px] text-outline">Học phí trọn gói:</span>
+                                        <span class="text-base font-black text-emerald-700 font-mono">
+                                            @lop.HocPhi.ToString("N0") đ
+                                        </span>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <a asp-action="ChiTiet" asp-route-id="@lop.MaLop"
+                                           class="w-full py-2.5 px-2 rounded-xl border border-border-standard hover:bg-slate-50 text-brand-deep text-xs font-bold text-center transition-colors">
+                                            Chi tiết
+                                        </a>
+
+                                        @if (isRegistered)
+                                        {
+                                            <a asp-action="TienTrinh" class="w-full py-2.5 px-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold text-center flex items-center justify-center gap-1">
+                                                <span class="material-symbols-outlined text-[15px]">verified</span>
+                                                <span>Đã đăng ký</span>
+                                            </a>
+                                        }
+                                        else if (isExpired)
+                                        {
+                                            <button disabled class="w-full py-2.5 px-2 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed">
+                                                Hết hạn
+                                            </button>
+                                        }
+                                        else if (isFull)
+                                        {
+                                            <button disabled class="w-full py-2.5 px-2 rounded-xl bg-rose-50 text-rose-400 text-xs font-bold cursor-not-allowed">
+                                                Hết chỗ
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" onclick="openEnrollModal(@lop.MaLop, '@lop.TenLop.Replace("'", "\\'") ', @lop.HocPhi)"
+                                                    class="w-full py-2.5 px-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-xs transition-all text-center flex items-center justify-center gap-1 cursor-pointer">
+                                                <span>Đăng ký ngay</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (totalPages > 1)
+                {
+                    <div class="pt-8 flex items-center justify-center gap-2">
+                        @if (currentPage > 1)
+                        {
+                            <a href="@Url.Action("DangKy", new { page = currentPage - 1, search = search, maChuongTrinh = selectedMaCT, trinhDo = selectedTrinhDo, mucGia = selectedMucGia, sapXep = selectedSapXep })"
+                               class="px-3.5 py-2 rounded-xl border border-border-standard bg-white text-xs font-semibold text-brand-deep hover:bg-slate-50">
+                                Trước
+                            </a>
+                        }
+
+                        @for (int p = 1; p <= totalPages; p++)
+                        {
+                            <a href="@Url.Action("DangKy", new { page = p, search = search, maChuongTrinh = selectedMaCT, trinhDo = selectedTrinhDo, mucGia = selectedMucGia, sapXep = selectedSapXep })"
+                               class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold font-mono transition-colors @(p == currentPage ? "bg-primary text-white shadow-xs" : "bg-white border border-border-standard text-slate-700 hover:bg-slate-50")">
+                                @p
+                            </a>
+                        }
+
+                        @if (currentPage < totalPages)
+                        {
+                            <a href="@Url.Action("DangKy", new { page = currentPage + 1, search = search, maChuongTrinh = selectedMaCT, trinhDo = selectedTrinhDo, mucGia = selectedMucGia, sapXep = selectedSapXep })"
+                               class="px-3.5 py-2 rounded-xl border border-border-standard bg-white text-xs font-semibold text-brand-deep hover:bg-slate-50">
+                                Tiếp theo
+                            </a>
+                        }
+                    </div>
+                }
+            }
+        </main>
+    </div>
+</div>
+
+<!-- ================= QUICK ENROLL & CHECKOUT MODAL ================= -->
+<div id="enroll-modal" class="fixed inset-0 bg-brand-deep/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl transform scale-95 transition-transform duration-200" id="enroll-modal-content">
+        <div class="flex items-center justify-between pb-4 border-b border-border-standard">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-[24px]">shopping_cart_checkout</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-base text-brand-deep">Xác Nhận Đăng Ký Khóa Học</h3>
+                    <p class="text-xs text-outline">Quy trình đăng ký trực tuyến chuẩn UNETI</p>
+                </div>
+            </div>
+            <button onclick="closeEnrollModal()" class="p-1.5 rounded-xl hover:bg-slate-100 text-outline hover:text-brand-deep">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
         </div>
 
-        <form id="registerForm" onsubmit="submitRegistration(event)" class="space-y-4">
+        <form id="enrollForm" onsubmit="submitEnrollment(event)" class="space-y-4 pt-4">
             @Html.AntiForgeryToken()
-            <input type="hidden" id="modal-MaLop" name="maLop" value="" />
+            <input type="hidden" id="modal-maLop" name="maLop" value="" />
 
-            <div>
-                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Ghi chú cho giáo vụ (tùy chọn)</label>
-                <textarea id="modal-GhiChu" name="ghiChu" rows="3" placeholder="Mong muốn, trình độ hiện tại hoặc yêu cầu hỗ trợ..."
-                          class="w-full px-3 py-2 text-xs rounded-xl border border-border-standard bg-surface-container-lowest focus:bg-surface-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-brand-deep"></textarea>
+            <!-- Order Summary Card -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-border-standard space-y-2 text-xs">
+                <div class="flex justify-between items-start gap-2">
+                    <span class="text-outline">Khóa học đăng ký:</span>
+                    <strong class="text-brand-deep text-right" id="modal-tenLop">—</strong>
+                </div>
+                <div class="flex justify-between items-center border-t border-border-standard pt-2">
+                    <span class="text-outline">Học phí cần đóng:</span>
+                    <strong class="text-emerald-700 font-mono text-sm font-black" id="modal-hocPhi">0 đ</strong>
+                </div>
             </div>
 
-            <div class="bg-surface-container-lowest p-3 rounded-xl border border-border-subtle text-[11px] text-outline">
-                <div class="flex items-center gap-1 text-primary font-bold mb-1">
-                    <span class="material-symbols-outlined text-[14px]">info</span>
-                    <span>Quy trình xử lý</span>
+            <!-- Student info preview -->
+            @if (currentStudent != null)
+            {
+                <div class="p-3.5 rounded-2xl bg-primary-light/60 border border-primary/20 text-xs space-y-1">
+                    <div class="text-[11px] text-primary font-bold uppercase tracking-wider">Thông tin người học:</div>
+                    <div class="font-bold text-brand-deep">@currentStudent.HoTen <span class="text-outline font-normal font-mono">(#HV@currentStudent.MaHocVien.ToString("D3"))</span></div>
+                    <div class="text-slate-600">Email: @currentStudent.Email • SĐT: @(currentStudent.SoDienThoai ?? "Chưa cập nhật")</div>
                 </div>
-                Sau khi gửi yêu cầu, hồ sơ sẽ ở trạng thái <strong>Chờ duyệt</strong>. Giáo vụ sẽ thẩm định và gửi thông báo nộp học phí trước ngày khai giảng.
+            }
+
+            <div>
+                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Ghi chú cho phòng đào tạo (tùy chọn)</label>
+                <textarea id="modal-ghiChu" name="ghiChu" rows="2" placeholder="Ví dụ: Mong muốn hỗ trợ lịch học vào buổi tối..."
+                          class="w-full px-3.5 py-2 text-xs rounded-xl border border-border-standard bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-brand-deep"></textarea>
+            </div>
+
+            <!-- Payment instructions -->
+            <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 space-y-1">
+                <div class="font-bold flex items-center gap-1 text-amber-800">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                    <span>Quy trình sau khi nộp đơn:</span>
+                </div>
+                <p class="text-[11px] leading-relaxed text-amber-800">
+                    Hồ sơ được gửi tới Ban Giáo vụ ở trạng thái <strong>Chờ duyệt</strong>. Sau khi duyệt, bạn có thể nộp học phí qua chuyển khoản ngân hàng hoặc nộp trực tiếp tại văn phòng đào tạo.
+                </p>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" onclick="closeRegisterModal()" class="px-4 py-2 text-xs font-semibold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-surface-container-high transition-colors">
-                    Hủy
+                <button type="button" onclick="closeEnrollModal()" class="px-4 py-2.5 text-xs font-bold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-slate-50 transition-colors">
+                    Hủy bỏ
                 </button>
-                <button type="submit" class="px-5 py-2 text-xs font-semibold text-surface-white bg-primary hover:bg-[#0047b3] rounded-xl shadow-sm transition-all flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[16px]">check</span>
+                <button type="submit" class="px-6 py-2.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
                     <span>Xác nhận gửi đơn</span>
                 </button>
             </div>
@@ -253,29 +532,40 @@
 
 @section Scripts {
 <script>
-    function openRegisterModal(maLop, className) {
-        document.getElementById('modal-MaLop').value = maLop;
-        document.getElementById('modal-class-name').innerText = className;
-        document.getElementById('modal-GhiChu').value = '';
+    function updateQueryParam(key, value) {
+        const url = new URL(window.location.href);
+        if (value) {
+            url.searchParams.set(key, value);
+        } else {
+            url.searchParams.delete(key);
+        }
+        return url.pathname + url.search;
+    }
 
-        const modal = document.getElementById('register-modal');
-        const content = document.getElementById('register-modal-content');
+    function openEnrollModal(maLop, tenLop, hocPhi) {
+        document.getElementById('modal-maLop').value = maLop;
+        document.getElementById('modal-tenLop').innerText = tenLop;
+        document.getElementById('modal-hocPhi').innerText = Number(hocPhi).toLocaleString() + ' đ';
+        document.getElementById('modal-ghiChu').value = '';
+
+        const modal = document.getElementById('enroll-modal');
+        const content = document.getElementById('enroll-modal-content');
         modal.classList.remove('opacity-0', 'pointer-events-none');
         content.classList.remove('scale-95');
         content.classList.add('scale-100');
     }
 
-    function closeRegisterModal() {
-        const modal = document.getElementById('register-modal');
-        const content = document.getElementById('register-modal-content');
+    function closeEnrollModal() {
+        const modal = document.getElementById('enroll-modal');
+        const content = document.getElementById('enroll-modal-content');
         modal.classList.add('opacity-0', 'pointer-events-none');
         content.classList.remove('scale-100');
         content.classList.add('scale-95');
     }
 
-    function submitRegistration(e) {
+    function submitEnrollment(e) {
         e.preventDefault();
-        const form = document.getElementById('registerForm');
+        const form = document.getElementById('enrollForm');
         const formData = new FormData(form);
 
         fetch('/CongHocVien/DangKyLopPost', {
@@ -286,9 +576,11 @@
         .then(res => res.json())
         .then(res => {
             if (res.success) {
-                closeRegisterModal();
+                closeEnrollModal();
                 if (window.showToast) window.showToast(res.message, 'success');
-                setTimeout(() => window.location.reload(), 1200);
+                setTimeout(() => {
+                    window.location.href = '/CongHocVien/TienTrinh';
+                }, 1200);
             } else {
                 if (window.showToast) window.showToast(res.message, 'error');
             }

@@ -1,0 +1,462 @@
+@model QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.LopHoc
+@{
+    // Họ và tên: [Tên SV3]
+    // Mã sinh viên: [Mã SV3]
+    // Nội dung thực hiện: Landing Page Chi tiết Khóa học (Edu-Commerce Course Page) - Cổng Học viên
+    ViewData["Title"] = $"{Model.TenLop} - Chi Tiết Khóa Học";
+    var buoiHocs = ViewBag.BuoiHocs as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc>();
+    int enrolledCount = ViewBag.EnrolledCount ?? 0;
+    int remainingSeats = ViewBag.RemainingSeats ?? 0;
+    double percentFilled = ViewBag.PercentFilled ?? 0;
+    var myReg = ViewBag.MyRegistration as QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc;
+    bool isRegistered = myReg != null;
+    bool isExpired = Model.HanDangKy < DateTime.Today;
+    bool isFull = remainingSeats <= 0;
+    var similarCourses = ViewBag.SimilarCourses as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.LopHoc> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.LopHoc>();
+}
+
+<!-- ================= COURSE HERO HEADER ================= -->
+<section class="bg-brand-deep text-white py-12 px-4 sm:px-6 lg:px-8 border-b border-white/10">
+    <div class="max-w-7xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center gap-2 text-xs text-slate-300 mb-4 font-medium">
+            <a href="/CongHocVien/DangKy" class="hover:text-white transition-colors">Trang chủ</a>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span class="text-amber-300">@(Model.ChuongTrinhDaoTao?.TenChuongTrinh ?? "Khóa học")</span>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span class="text-white truncate max-w-xs">@Model.TenLop</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-8 space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/15 text-white border border-white/20">
+                        @Model.TrinhDoDauVao
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-slate-900 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">star</span> 4.9 (128 đánh giá)
+                    </span>
+                    <span class="text-xs text-slate-300">
+                        Mã khóa học: <strong class="text-white font-mono">#LH@Model.MaLop.ToString("D3")</strong>
+                    </span>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+                    @Model.TenLop
+                </h1>
+
+                <p class="text-slate-300 text-sm leading-relaxed max-w-2xl font-normal">
+                    @(string.IsNullOrWhiteSpace(Model.MoTa) ? "Khóa học thực chiến cung cấp trọn bộ kiến thức từ cơ bản đến nâng cao, hướng dẫn học viên thực hành dự án theo quy trình doanh nghiệp." : Model.MoTa)
+                </p>
+
+                <!-- Instructor & Meta row -->
+                <div class="flex flex-wrap items-center gap-6 text-xs text-slate-300 pt-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-primary text-white font-bold flex items-center justify-center text-xs">
+                            @(string.IsNullOrWhiteSpace(Model.GiangVien) ? "GV" : Model.GiangVien.Substring(0, 1))
+                        </div>
+                        <div>
+                            <span class="text-[11px] block text-slate-400">Giảng viên đứng lớp:</span>
+                            <span class="font-bold text-white">@Model.GiangVien</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+                        <div>
+                            <span class="text-[11px] block text-slate-400">Ngày khai giảng:</span>
+                            <span class="font-bold text-white font-mono">@Model.NgayKhaiGiang.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px] text-primary">schedule</span>
+                        <div>
+                            <span class="text-[11px] block text-slate-400">Thời lượng:</span>
+                            <span class="font-bold text-white font-mono">@Model.SoBuoiHoc buổi học trực tiếp</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= COURSE DETAILS BODY & STICKY PURCHASE BOX ================= -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- LEFT COLUMN: COURSE CONTENT & SYLLABUS (8 COLS) -->
+        <div class="lg:col-span-8 space-y-8">
+            <!-- 1. What you'll learn box -->
+            <div class="bg-white rounded-3xl p-6 sm:p-7 border border-border-standard shadow-xs space-y-4">
+                <h2 class="text-base sm:text-lg font-bold text-brand-deep flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[22px] text-primary">psychology</span>
+                    <span>Bạn Sẽ Đạt Được Gì Sau Khóa Học?</span>
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-slate-700">
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-accent-emerald text-[18px] shrink-0 mt-0.5">check_circle</span>
+                        <span>Nắm vững toàn diện kiến thức nền tảng và chuyên sâu về môn học.</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-accent-emerald text-[18px] shrink-0 mt-0.5">check_circle</span>
+                        <span>Tự tay xây dựng được dự án thực chiến chuẩn quy trình doanh nghiệp.</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-accent-emerald text-[18px] shrink-0 mt-0.5">check_circle</span>
+                        <span>Được giảng viên sửa bài 1:1 và hướng dẫn tư duy giải quyết vấn đề.</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-accent-emerald text-[18px] shrink-0 mt-0.5">check_circle</span>
+                        <span>Được cấp chứng chỉ hoàn thành khóa học uy tín từ trường UNETI.</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-accent-emerald text-[18px] shrink-0 mt-0.5">check_circle</span>
+                        <span>Hỗ trợ kết nối và giới thiệu việc làm với mạng lưới doanh nghiệp đối tác.</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-accent-emerald text-[18px] shrink-0 mt-0.5">check_circle</span>
+                        <span>Tặng toàn bộ slide bài giảng, source code và tài liệu học tập trọn đời.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Course Syllabus / Buổi học -->
+            <div class="bg-white rounded-3xl p-6 sm:p-7 border border-border-standard shadow-xs space-y-5">
+                <div class="flex items-center justify-between pb-3 border-b border-border-standard">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-brand-deep flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[22px] text-primary">list_alt</span>
+                            <span>Đề Cương & Lịch Học Chi Tiết</span>
+                        </h2>
+                        <p class="text-xs text-outline mt-0.5">Tổng cộng @Model.SoBuoiHoc buổi học theo lộ trình chuẩn hóa</p>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-primary px-3 py-1 bg-primary-light rounded-xl">
+                        @buoiHocs.Count / @Model.SoBuoiHoc buổi đã lên lịch
+                    </span>
+                </div>
+
+                @if (buoiHocs.Count == 0)
+                {
+                    <div class="text-center py-8 text-outline text-xs">
+                        <span class="material-symbols-outlined text-[36px] opacity-40 mb-1">calendar_clock</span>
+                        <p>Lịch học chi tiết từng buổi đang được ban giáo vụ sắp xếp và sẽ công bố trước ngày khai giảng.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-3">
+                        @{ int idx = 1; }
+                        @foreach (var b in buoiHocs)
+                        {
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-border-standard hover:border-primary/40 transition-all flex items-start justify-between gap-3 text-xs">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-xl bg-brand-deep text-white font-mono font-bold flex items-center justify-center shrink-0 shadow-xs">
+                                        @(idx++)
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="font-bold text-brand-deep text-sm">
+                                            @(string.IsNullOrWhiteSpace(b.NoiDung) ? $"Buổi {idx - 1}: Nội dung học phần chuyên sâu" : b.NoiDung)
+                                        </div>
+                                        <div class="text-outline text-[11px] flex flex-wrap items-center gap-3">
+                                            <span class="flex items-center gap-1 font-mono text-slate-700">
+                                                <span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
+                                                @b.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm") - @b.ThoiGianKetThuc.ToString("HH:mm")
+                                            </span>
+                                            <span>•</span>
+                                            <span class="flex items-center gap-1 text-slate-700">
+                                                <span class="material-symbols-outlined text-[15px] text-primary">meeting_room</span>
+                                                Phòng: <strong>@b.PhongHoc</strong>
+                                            </span>
+                                            <span>•</span>
+                                            <span>GV: @b.GiangVien</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold shrink-0
+                                    @(b.TrangThai == "Đã hoàn thành" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                                      b.TrangThai == "Đang diễn ra" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                                      "bg-slate-200 text-slate-700")">
+                                    @b.TrangThai
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- 3. Prerequisites & Audience -->
+            @if (!string.IsNullOrWhiteSpace(Model.YeuCauHocVien))
+            {
+                <div class="bg-white rounded-3xl p-6 sm:p-7 border border-border-standard shadow-xs space-y-3">
+                    <h2 class="text-base font-bold text-brand-deep flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px] text-primary">school</span>
+                        <span>Yêu Cầu Đầu Vào & Đối Tượng Phù Hợp</span>
+                    </h2>
+                    <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                        @Model.YeuCauHocVien
+                    </div>
+                </div>
+            }
+
+            <!-- 4. Instructor Profile -->
+            <div class="bg-white rounded-3xl p-6 sm:p-7 border border-border-standard shadow-xs space-y-4">
+                <h2 class="text-base font-bold text-brand-deep flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px] text-primary">record_voice_over</span>
+                    <span>Thông Tin Giảng Viên Hướng Dẫn</span>
+                </h2>
+                <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-border-standard">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-deep to-primary text-white font-black text-xl flex items-center justify-center shrink-0 shadow-md">
+                        @(string.IsNullOrWhiteSpace(Model.GiangVien) ? "GV" : Model.GiangVien.Substring(0, 1))
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-bold text-base text-brand-deep">@Model.GiangVien</h3>
+                        <p class="text-xs text-outline">Giảng viên / Chuyên gia đào tạo tại UNETI EDUSPACE</p>
+                        <p class="text-[11px] text-slate-600">Nhiều năm kinh nghiệm giảng dạy và triển khai các dự án thực tế cho doanh nghiệp.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Similar courses -->
+            @if (similarCourses.Any())
+            {
+                <div class="space-y-4 pt-4">
+                    <h2 class="text-base font-bold text-brand-deep">Khóa Học Khác Cùng Chuyên Ngành</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        @foreach (var c in similarCourses)
+                        {
+                            <a asp-action="ChiTiet" asp-route-id="@c.MaLop" class="p-4 rounded-2xl bg-white border border-border-standard hover:border-primary/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                                <div class="space-y-1 mb-2">
+                                    <span class="text-[10px] font-bold text-primary uppercase">@c.TrinhDoDauVao</span>
+                                    <h4 class="font-bold text-xs text-brand-deep line-clamp-2">@c.TenLop</h4>
+                                </div>
+                                <div class="flex items-center justify-between text-xs pt-2 border-t border-border-standard">
+                                    <span class="font-mono font-bold text-emerald-700">@c.HocPhi.ToString("N0") đ</span>
+                                    <span class="text-primary font-semibold flex items-center gap-0.5">
+                                        Xem ngay <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                    </span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- RIGHT COLUMN: STICKY PURCHASE CARD (4 COLS) -->
+        <div class="lg:col-span-4 sticky top-28 space-y-6">
+            <div class="bg-white rounded-3xl p-6 border border-border-standard shadow-xl space-y-6">
+                <!-- Cover Banner inside card -->
+                <div class="h-36 rounded-2xl bg-gradient-to-tr from-brand-deep via-primary to-indigo-700 p-4 flex flex-col justify-between text-white shadow-inner">
+                    <span class="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full w-fit">
+                        Tuyển sinh 2024 - 2025
+                    </span>
+                    <div>
+                        <span class="text-[11px] opacity-80 block">Trọn gói khóa học</span>
+                        <span class="text-2xl font-black font-mono text-amber-300">
+                            @Model.HocPhi.ToString("N0") đ
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Urgency & Seats Progress -->
+                <div class="space-y-2 p-4 rounded-2xl bg-slate-50 border border-border-standard text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-outline">Tiến độ tuyển sinh:</span>
+                        <strong class="text-brand-deep font-mono">@enrolledCount / @Model.SiSoToiDa học viên</strong>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div class="h-2 rounded-full @(percentFilled >= 100 ? "bg-rose-500" : percentFilled >= 80 ? "bg-amber-500" : "bg-primary")"
+                             style="width: @percentFilled%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] pt-1">
+                        <span class="text-outline">Hạn chót nộp đơn:</span>
+                        <span class="font-mono font-bold @(isExpired ? "text-rose-600" : "text-brand-deep")">
+                            @Model.HanDangKy.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
+                    <div class="text-[11px] font-bold @(isFull ? "text-rose-600" : "text-emerald-700") flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[15px]">info</span>
+                        <span>@(isFull ? "Lớp đã đủ chỉ tiêu sĩ số" : $"Còn trống {remainingSeats} chỗ đăng ký")</span>
+                    </div>
+                </div>
+
+                <!-- CTA Action Button -->
+                <div>
+                    @if (isRegistered)
+                    {
+                        <div class="space-y-2">
+                            <a asp-action="TienTrinh" class="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm text-center shadow-md flex items-center justify-center gap-2 transition-all">
+                                <span class="material-symbols-outlined text-[18px]">verified</span>
+                                <span>Bạn đã đăng ký khóa học này</span>
+                            </a>
+                            <span class="text-[11px] text-outline text-center block">Trạng thái đơn: <strong>@myReg.TrangThai</strong></span>
+                        </div>
+                    }
+                    else if (isExpired)
+                    {
+                        <button disabled class="w-full py-3.5 px-4 rounded-2xl bg-slate-100 text-slate-400 font-bold text-xs sm:text-sm text-center cursor-not-allowed">
+                            Đã hết hạn đăng ký khóa học
+                        </button>
+                    }
+                    else if (isFull)
+                    {
+                        <button disabled class="w-full py-3.5 px-4 rounded-2xl bg-rose-50 text-rose-400 font-bold text-xs sm:text-sm text-center cursor-not-allowed">
+                            Lớp học đã đủ chỉ tiêu sĩ số
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" onclick="openEnrollModal(@Model.MaLop, '@Model.TenLop.Replace("'", "\\'") ', @Model.HocPhi)"
+                                class="w-full py-3.5 px-4 rounded-2xl bg-primary hover:bg-primary-hover text-white font-bold text-xs sm:text-sm text-center shadow-lg shadow-primary/30 hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <span class="material-symbols-outlined text-[20px]">how_to_reg</span>
+                            <span>ĐĂNG KÝ HỌC NGAY</span>
+                        </button>
+                    }
+                </div>
+
+                <!-- Checklist inclusions -->
+                <div class="pt-4 border-t border-border-standard space-y-2.5 text-xs text-slate-700">
+                    <span class="text-xs font-bold text-brand-deep block uppercase tracking-wider">Khóa học bao gồm:</span>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span>
+                        <span>Chứng chỉ hoàn thành từ Đại học UNETI</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+                        <span>@Model.SoBuoiHoc buổi học trực tiếp với giảng viên</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">folder_zip</span>
+                        <span>Tài liệu bài giảng & Source code trọn đời</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">support_agent</span>
+                        <span>Hỗ trợ kỹ thuật và học tập 24/7</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">autorenew</span>
+                        <span>Hỗ trợ bảo lưu học phí linh hoạt</span>
+                    </div>
+                </div>
+
+                <!-- Hotline support -->
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-border-standard text-center text-xs text-outline space-y-1">
+                    <span>Cần tư vấn thêm lộ trình học?</span>
+                    <p class="font-bold text-brand-deep">Hotline: 1900 6868 (8:00 - 21:00)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Enroll Modal -->
+<div id="enroll-modal" class="fixed inset-0 bg-brand-deep/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl transform scale-95 transition-transform duration-200" id="enroll-modal-content">
+        <div class="flex items-center justify-between pb-4 border-b border-border-standard">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-[24px]">school</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-base text-brand-deep">Xác Nhận Đăng Ký Khóa Học</h3>
+                    <p class="text-xs text-outline">Quy trình đăng ký trực tuyến chuẩn UNETI</p>
+                </div>
+            </div>
+            <button onclick="closeEnrollModal()" class="p-1.5 rounded-xl hover:bg-slate-100 text-outline hover:text-brand-deep">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        <form id="enrollForm" onsubmit="submitEnrollment(event)" class="space-y-4 pt-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="modal-maLop" name="maLop" value="@Model.MaLop" />
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-border-standard space-y-2 text-xs">
+                <div class="flex justify-between items-start gap-2">
+                    <span class="text-outline">Khóa học đăng ký:</span>
+                    <strong class="text-brand-deep text-right">@Model.TenLop</strong>
+                </div>
+                <div class="flex justify-between items-center border-t border-border-standard pt-2">
+                    <span class="text-outline">Học phí cần đóng:</span>
+                    <strong class="text-emerald-700 font-mono text-sm font-black">@Model.HocPhi.ToString("N0") đ</strong>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-brand-deep uppercase mb-1">Ghi chú cho phòng đào tạo (tùy chọn)</label>
+                <textarea id="modal-ghiChu" name="ghiChu" rows="2" placeholder="Ví dụ: Mong muốn được xếp lớp thực hành cuối tuần..."
+                          class="w-full px-3.5 py-2 text-xs rounded-xl border border-border-standard bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-brand-deep"></textarea>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 space-y-1">
+                <div class="font-bold flex items-center gap-1 text-amber-800">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                    <span>Quy trình xử lý hồ sơ:</span>
+                </div>
+                <p class="text-[11px] leading-relaxed text-amber-800">
+                    Sau khi gửi yêu cầu, hồ sơ sẽ ở trạng thái <strong>Chờ duyệt</strong>. Bạn có thể kiểm tra kết quả duyệt và nộp học phí tại mục <strong>Khóa học của tôi</strong>.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeEnrollModal()" class="px-4 py-2.5 text-xs font-bold text-outline hover:text-brand-deep border border-border-standard rounded-xl hover:bg-slate-50 transition-colors">
+                    Hủy bỏ
+                </button>
+                <button type="submit" class="px-6 py-2.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+                    <span>Xác nhận gửi đơn</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openEnrollModal(maLop, tenLop, hocPhi) {
+        document.getElementById('modal-maLop').value = maLop;
+        document.getElementById('modal-ghiChu').value = '';
+
+        const modal = document.getElementById('enroll-modal');
+        const content = document.getElementById('enroll-modal-content');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeEnrollModal() {
+        const modal = document.getElementById('enroll-modal');
+        const content = document.getElementById('enroll-modal-content');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+
+    function submitEnrollment(e) {
+        e.preventDefault();
+        const form = document.getElementById('enrollForm');
+        const formData = new FormData(form);
+
+        fetch('/CongHocVien/DangKyLopPost', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                closeEnrollModal();
+                if (window.showToast) window.showToast(res.message, 'success');
+                setTimeout(() => {
+                    window.location.href = '/CongHocVien/TienTrinh';
+                }, 1200);
+            } else {
+                if (window.showToast) window.showToast(res.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showToast) window.showToast('Có lỗi xảy ra khi gửi đăng ký!', 'error');
+        });
+    }
+</script>
+}
