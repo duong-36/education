@@ -59,6 +59,20 @@
                     <span class="font-medium leading-relaxed">@ViewBag.Error</span>
                 </div>
             }
+            @if (TempData["Warning"] != null)
+            {
+                <div class="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2.5 text-amber-800 text-xs">
+                    <span class="material-symbols-outlined text-[18px] text-amber-600 flex-shrink-0">warning</span>
+                    <span class="font-medium leading-relaxed">@TempData["Warning"]</span>
+                </div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2.5 text-emerald-800 text-xs">
+                    <span class="material-symbols-outlined text-[18px] text-emerald-600 flex-shrink-0">check_circle</span>
+                    <span class="font-medium leading-relaxed">@TempData["Success"]</span>
+                </div>
+            }
 
             <!-- Form -->
             <form method="post" action="/TaiKhoan/Login" class="space-y-4">
@@ -90,6 +104,21 @@
                         <span>Đăng nhập hệ thống</span>
                         <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </button>
+                </div>
+
+                <div class="pt-2 text-center text-xs text-outline space-y-2">
+                    <p>
+                        Chưa có tài khoản?
+                        <a href="/TaiKhoan/Register" class="text-primary font-bold hover:underline">
+                            Đăng ký học viên mới
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/" class="text-slate-500 hover:text-brand-deep inline-flex items-center gap-1 text-[11px]">
+                            <span class="material-symbols-outlined text-[14px]">home</span>
+                            <span>Quay lại Trang chủ EdTech</span>
+                        </a>
+                    </p>
                 </div>
             </form>
 

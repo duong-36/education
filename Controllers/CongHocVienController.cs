@@ -23,7 +23,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         }
 
         // Helper lấy học viên hiện tại theo Session
-        private async Task<HocVien> GetCurrentHocVienAsync()
+        private async Task<HocVien?> GetCurrentHocVienAsync()
         {
             int? maHocVien = HttpContext.Session.GetInt32("MaHocVien");
             if (maHocVien.HasValue)
@@ -39,8 +39,8 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
                 if (hv != null) return hv;
             }
 
-            // Hỗ trợ test nhanh nếu chưa đăng nhập hoặc là Admin test cổng học viên: lấy học viên đầu tiên
-            return await _context.HocViens.FirstOrDefaultAsync();
+            // Khách vãng lai chưa đăng nhập -> trả về null, tuyệt đối không lấy bừa dữ liệu của học viên khác
+            return null;
         }
 
         // --- ĐIỀU HƯỚNG TRANG CHỦ CỔNG HỌC VIÊN ---
@@ -57,6 +57,12 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             int pageSize = 12)
         {
             var student = await GetCurrentHocVienAsync();
+            if (student == null)
+            {
+                TempData["Warning"] = "Vui lòng đăng nhập hoặc đăng ký tài khoản học viên để truy cập danh mục và đăng ký khóa học.";
+                return RedirectToAction("Login", "TaiKhoan", new { returnUrl = Request.Path + Request.QueryString });
+            }
+
             ViewBag.CurrentStudent = student;
 
             var query = _context.LopHocs
@@ -165,6 +171,11 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         public async Task<IActionResult> ChiTiet(int id)
         {
             var student = await GetCurrentHocVienAsync();
+            if (student == null)
+            {
+                TempData["Warning"] = "Vui lòng đăng nhập hoặc đăng ký tài khoản học viên để xem chi tiết khóa học.";
+                return RedirectToAction("Login", "TaiKhoan", new { returnUrl = Request.Path + Request.QueryString });
+            }
             ViewBag.CurrentStudent = student;
 
             var lop = await _context.LopHocs
@@ -218,7 +229,7 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             var student = await GetCurrentHocVienAsync();
             if (student == null)
             {
-                return Json(new { success = false, message = "Bạn cần đăng nhập tài khoản học viên để thực hiện đăng ký." });
+                return Json(new { success = false, requireLogin = true, message = "Bạn cần đăng nhập hoặc đăng ký tài khoản học viên để thực hiện đăng ký khóa học." });
             }
 
             var lop = await _context.LopHocs.FindAsync(maLop);
@@ -313,8 +324,8 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             var student = await GetCurrentHocVienAsync();
             if (student == null)
             {
-                TempData["Error"] = "Vui lòng đăng nhập để xem không gian học tập.";
-                return RedirectToAction("Login", "TaiKhoan");
+                TempData["Warning"] = "Vui lòng đăng nhập hoặc đăng ký tài khoản học viên để truy cập không gian học tập và theo dõi tiến trình.";
+                return RedirectToAction("Login", "TaiKhoan", new { returnUrl = "/CongHocVien/TienTrinh" });
             }
 
             ViewBag.CurrentStudent = student;
@@ -366,8 +377,8 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             var student = await GetCurrentHocVienAsync();
             if (student == null)
             {
-                TempData["Error"] = "Vui lòng đăng nhập để xem hồ sơ.";
-                return RedirectToAction("Login", "TaiKhoan");
+                TempData["Warning"] = "Vui lòng đăng nhập hoặc đăng ký tài khoản học viên để xem thông tin hồ sơ và lịch sử học phí.";
+                return RedirectToAction("Login", "TaiKhoan", new { returnUrl = "/CongHocVien/HoSo" });
             }
 
             var tk = await _context.TaiKhoans.FindAsync(student.MaTaiKhoan);

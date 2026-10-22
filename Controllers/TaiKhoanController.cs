@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Data;
 using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models;
+using QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.ViewModels;
 
 namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
 {
@@ -20,6 +21,93 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
         public TaiKhoanController(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        // --- ĐĂNG KÝ TÀI KHOẢN HỌC VIÊN (PUBLIC) ---
+        [HttpGet]
+        public IActionResult Register()
+        {
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+            if (!string.IsNullOrEmpty(vaiTro))
+            {
+                if (vaiTro == "Học viên") return RedirectToAction("DangKy", "CongHocVien");
+                return RedirectToAction("Dashboard", "ThongKe");
+            }
+            return View(new RegisterViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            string username = model.TenDangNhap.Trim();
+            string email = model.Email.Trim().ToLower();
+
+            // 1. Kiểm tra trùng tên đăng nhập
+            bool usernameExists = await _context.TaiKhoans
+                .AnyAsync(t => t.TenDangNhap.ToLower() == username.ToLower());
+            if (usernameExists)
+            {
+                ModelState.AddModelError("TenDangNhap", "Tên đăng nhập này đã tồn tại trong hệ thống. Vui lòng chọn tên khác.");
+                return View(model);
+            }
+
+            // 2. Kiểm tra trùng Email
+            bool emailExists = await _context.TaiKhoans
+                .AnyAsync(t => t.Email.ToLower() == email);
+            if (emailExists)
+            {
+                ModelState.AddModelError("Email", "Địa chỉ email này đã được sử dụng cho một tài khoản khác.");
+                return View(model);
+            }
+
+            // 3. TẠO TÀI KHOẢN (MẶC ĐỊNH BẮT BUỘC LÀ HỌC VIÊN)
+            var tk = new TaiKhoan
+            {
+                TenDangNhap = username,
+                MatKhau = model.MatKhau,
+                HoTen = model.HoTen.Trim(),
+                Email = email,
+                VaiTro = "Học viên", // MẶC ĐỊNH CỐ ĐỊNH LÀ HỌC VIÊN
+                TrangThai = "Đang hoạt động"
+            };
+
+            _context.TaiKhoans.Add(tk);
+            await _context.SaveChangesAsync();
+
+            // 4. TỰ ĐỘNG TẠO HỒ SƠ HỌC VIÊN TƯƠNG ỨNG
+            var hv = new HocVien
+            {
+                MaTaiKhoan = tk.MaTaiKhoan,
+                HoTen = model.HoTen.Trim(),
+                Email = email,
+                SoDienThoai = model.SoDienThoai?.Trim() ?? "",
+                NgaySinh = model.NgaySinh ?? DateTime.Today.AddYears(-20),
+                GioiTinh = string.IsNullOrWhiteSpace(model.GioiTinh) ? "Nam" : model.GioiTinh,
+                DiaChi = string.IsNullOrWhiteSpace(model.DiaChi) ? "Hà Nội" : model.DiaChi.Trim(),
+                TrinhDoHocVan = "Đại học",
+                NgheNghiep = "Học viên",
+                TrangThai = "Đang học"
+            };
+
+            _context.HocViens.Add(hv);
+            await _context.SaveChangesAsync();
+
+            // 5. ĐĂNG NHẬP TỰ ĐỘNG VÀO SESSION
+            HttpContext.Session.SetInt32("MaTaiKhoan", tk.MaTaiKhoan);
+            HttpContext.Session.SetString("TenDangNhap", tk.TenDangNhap);
+            HttpContext.Session.SetString("HoTen", tk.HoTen);
+            HttpContext.Session.SetString("VaiTro", tk.VaiTro);
+            HttpContext.Session.SetString("Email", tk.Email);
+            HttpContext.Session.SetInt32("MaHocVien", hv.MaHocVien);
+
+            TempData["Success"] = $"Chúc mừng {tk.HoTen}! Bạn đã đăng ký thành công tài khoản Học viên UNETI EDUSPACE.";
+            return RedirectToAction("DangKy", "CongHocVien");
         }
 
         // --- ĐĂNG NHẬP / ĐĂNG XUẤT ---
