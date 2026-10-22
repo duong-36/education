@@ -25,13 +25,14 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Tự động kiểm tra và tạo CSDL (Auto-Migrate) nếu chưa có
+// Tự động kiểm tra và tạo CSDL (Auto-Migrate) nếu chưa có & Dàn trải lịch học
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         db.Database.Migrate();
+        SpreadSessionsInitializer.EnsureSpreadSessionsAsync(db).GetAwaiter().GetResult();
     }
     catch (Exception ex)
     {

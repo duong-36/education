@@ -1,0 +1,336 @@
+@model IEnumerable<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc>
+@{
+    // Họ và tên: Nguyễn Đức Linh
+    // Mã sinh viên: 23103100042
+    // Nội dung thực hiện: Bảng Thời Khóa Biểu Học Theo Tuần Chuẩn UNETI (Module 3 & 5)
+    ViewData["Title"] = "Lịch Học & Lịch Thi Theo Tuần";
+
+    var student = ViewBag.CurrentStudent as QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.HocVien;
+    var myEnrolled = ViewBag.MyEnrolledClasses as List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc> ?? new List<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.DangKyHoc>();
+    var weekDays = ViewBag.WeekDays as List<DateTime> ?? new List<DateTime>();
+    DateTime monday = ViewBag.Monday ?? DateTime.Today;
+    DateTime sunday = ViewBag.Sunday ?? DateTime.Today.AddDays(6);
+    DateTime selectedDate = ViewBag.SelectedDate ?? DateTime.Today;
+    int? selectedMaLop = ViewBag.SelectedMaLop;
+    string selectedLoaiLich = ViewBag.SelectedLoaiLich ?? "tat_ca";
+    var selectedLop = ViewBag.SelectedLop as QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.LopHoc;
+
+    DateTime prevWeek = monday.AddDays(-7);
+    DateTime nextWeek = monday.AddDays(7);
+    DateTime today = DateTime.Today;
+
+    // Helper phân loại ca học:
+    // Sáng: bắt đầu trước 12:00
+    // Chiều: bắt đầu từ 12:00 đến trước 18:00
+    // Tối: bắt đầu từ 18:00 trở đi
+    Func<QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Models.BuoiHoc, string> getCaHoc = (b) =>
+    {
+        if (b.ThoiGianBatDau.Hour < 12) return "Sáng";
+        if (b.ThoiGianBatDau.Hour < 18) return "Chiều";
+        return "Tối";
+    };
+
+    string[] caList = new string[] { "Sáng", "Chiều", "Tối" };
+    string[] thuNames = new string[] { "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật" };
+}
+
+<div class="max-w-[98%] mx-auto px-2 sm:px-4 py-6 space-y-6">
+
+    <!-- Breadcrumb & Top Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border-standard">
+        <div class="space-y-1">
+            <nav class="flex items-center gap-2 text-xs text-outline font-medium">
+                <a href="/" class="hover:text-primary transition-colors">Trang chủ</a>
+                <span>/</span>
+                <a href="/CongHocVien/TienTrinh" class="hover:text-primary transition-colors">Không gian học tập</a>
+                <span>/</span>
+                <span class="text-brand-deep font-bold">Thời khóa biểu theo tuần</span>
+            </nav>
+            <h1 class="text-xl sm:text-2xl font-black text-brand-deep tracking-tight flex items-center gap-2">
+                <span>Lịch học, lịch thi theo tuần</span>
+                @if (selectedLop != null)
+                {
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-primary-light text-primary font-bold">
+                        Lớp: @selectedLop.TenLop
+                    </span>
+                }
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="/CongHocVien/TienTrinh"
+               class="px-4 py-2 rounded-xl border border-border-standard text-brand-deep text-xs font-bold hover:bg-slate-100 transition-colors flex items-center gap-1.5 shadow-2xs">
+                <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span>Quay lại tiến trình</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ================= TOP CONTROL STRIP (CHUẨN ẢNH MẪU UNETI) ================= -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-border-standard shadow-xs space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Radio Filters (Tất cả / Lịch học / Lịch thi) -->
+            <div class="flex items-center gap-5 text-xs font-semibold text-slate-700">
+                <label class="inline-flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+                    <input type="radio" name="loaiLichRadio" value="tat_ca" @(selectedLoaiLich == "tat_ca" ? "checked" : "")
+                           onchange="changeLoaiLich(this.value)" class="w-4 h-4 text-primary focus:ring-primary accent-primary" />
+                    <span>Tất cả</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+                    <input type="radio" name="loaiLichRadio" value="lich_hoc" @(selectedLoaiLich == "lich_hoc" ? "checked" : "")
+                           onchange="changeLoaiLich(this.value)" class="w-4 h-4 text-primary focus:ring-primary accent-primary" />
+                    <span>Lịch học</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+                    <input type="radio" name="loaiLichRadio" value="lich_thi" @(selectedLoaiLich == "lich_thi" ? "checked" : "")
+                           onchange="changeLoaiLich(this.value)" class="w-4 h-4 text-primary focus:ring-primary accent-primary" />
+                    <span>Lịch thi</span>
+                </label>
+            </div>
+
+            <!-- Filter Dropdown theo Lớp học -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-outline font-medium whitespace-nowrap">Chọn môn/lớp:</span>
+                <select id="selectLopHoc" onchange="changeLopHoc(this.value)"
+                        class="px-3 py-1.5 rounded-xl border border-border-standard bg-slate-50 text-xs font-semibold text-brand-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    <option value="">-- Tất cả các môn đang học --</option>
+                    @foreach (var dk in myEnrolled)
+                    {
+                        var l = dk.LopHoc;
+                        if (l != null)
+                        {
+                            <!option value="@l.MaLop" @(selectedMaLop == l.MaLop ? "selected" : "")>
+                                @l.TenLop (@(l.GiangVien))
+                            </!option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Date Picker & Week Navigation Controls -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Date input -->
+                <div class="relative">
+                    <input type="date" id="targetDatePicker" value="@selectedDate.ToString("yyyy-MM-dd")"
+                           onchange="changeDate(this.value)"
+                           class="px-3 py-1.5 text-xs font-mono font-semibold rounded-xl border border-border-standard bg-slate-50 text-brand-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                </div>
+
+                <!-- Hiện tại button -->
+                <a href="@Url.Action("ThoiKhoaBieu", new { maLop = selectedMaLop, loaiLich = selectedLoaiLich, ngay = today.ToString("yyyy-MM-dd") })"
+                   class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-2xs">
+                    <span class="material-symbols-outlined text-[15px]">today</span>
+                    <span>Hiện tại</span>
+                </a>
+
+                <!-- In lịch button -->
+                <button type="button" onclick="window.print()"
+                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-2xs cursor-pointer">
+                    <span class="material-symbols-outlined text-[15px]">print</span>
+                    <span>In lịch</span>
+                </button>
+
+                <!-- Trở về tuần trước -->
+                <a href="@Url.Action("ThoiKhoaBieu", new { maLop = selectedMaLop, loaiLich = selectedLoaiLich, ngay = prevWeek.ToString("yyyy-MM-dd") })"
+                   class="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-2xs">
+                    <span class="material-symbols-outlined text-[15px]">chevron_left</span>
+                    <span>Trở về</span>
+                </a>
+
+                <!-- Tiếp tuần sau -->
+                <a href="@Url.Action("ThoiKhoaBieu", new { maLop = selectedMaLop, loaiLich = selectedLoaiLich, ngay = nextWeek.ToString("yyyy-MM-dd") })"
+                   class="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-2xs">
+                    <span>Tiếp</span>
+                    <span class="material-symbols-outlined text-[15px]">chevron_right</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TIMETABLE MATRIX TABLE (CHUẨN ẢNH UNETI) ================= -->
+    <div class="bg-white rounded-3xl border border-slate-300 shadow-sm overflow-hidden" id="print-area">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left min-w-[1050px]">
+                <!-- Header Row -->
+                <thead>
+                    <tr class="bg-sky-50/80 text-brand-deep text-xs font-bold border-b border-slate-300">
+                        <!-- Ca học column -->
+                        <th class="py-3.5 px-3 w-24 text-center border-r border-slate-300 font-extrabold text-sky-700 bg-sky-100/60 uppercase tracking-wider">
+                            Ca học
+                        </th>
+
+                        <!-- 7 Days Columns -->
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            var currentDay = weekDays[i];
+                            bool isToday = currentDay.Date == today.Date;
+                            string dayName = thuNames[i];
+
+                            <th class="py-3.5 px-3 text-center border-r border-slate-300 last:border-r-0 transition-colors @(isToday ? "bg-emerald-100/70 border-b-2 border-b-emerald-600 text-emerald-950 font-black" : "text-sky-900")">
+                                <div class="space-y-0.5">
+                                    <div class="text-sm">@dayName</div>
+                                    <div class="font-mono text-[11px] font-semibold @(isToday ? "text-emerald-800" : "text-slate-600")">
+                                        @currentDay.ToString("dd/MM/yyyy")
+                                    </div>
+                                    @if (isToday)
+                                    {
+                                        <span class="inline-block mt-0.5 px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-600 text-white animate-pulse">
+                                            HÔM NAY
+                                        </span>
+                                    }
+                                </div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+
+                <!-- Body Rows: Sáng, Chiều, Tối -->
+                <tbody class="divide-y divide-slate-300">
+                    @foreach (var ca in caList)
+                    {
+                        <tr class="min-h-[140px] hover:bg-slate-50/40 transition-colors">
+                            <!-- Ca học Title Column -->
+                            <td class="py-6 px-2 text-center font-bold text-xs border-r border-slate-300 align-middle
+                                       @(ca == "Sáng" ? "bg-amber-50/80 text-amber-900" : ca == "Chiều" ? "bg-orange-50/70 text-orange-900" : "bg-purple-50/70 text-purple-900")">
+                                <span class="text-sm font-black uppercase tracking-wider block">@ca</span>
+                            </td>
+
+                            <!-- 7 Days Cells -->
+                            @for (int dayIdx = 0; dayIdx < 7; dayIdx++)
+                            {
+                                var currentDay = weekDays[dayIdx];
+                                bool isToday = currentDay.Date == today.Date;
+
+                                // Lấy các buổi học rơi vào ngày này và ca học này
+                                var cellSessions = Model
+                                    .Where(b => b.ThoiGianBatDau.Date == currentDay.Date && getCaHoc(b) == ca)
+                                    .OrderBy(b => b.ThoiGianBatDau)
+                                    .ToList();
+
+                                <td class="p-2 border-r border-slate-300 last:border-r-0 align-top relative transition-colors @(isToday ? "bg-emerald-50/30" : "bg-white")"
+                                    style="background-image: radial-gradient(#cbd5e1 0.75px, transparent 0.75px); background-size: 16px 16px;">
+                                    
+                                    @if (!cellSessions.Any())
+                                    {
+                                        <!-- Empty Cell Space -->
+                                        <div class="h-24 w-full flex items-center justify-center text-[10px] text-slate-300 pointer-events-none select-none">
+                                            —
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="space-y-2.5">
+                                            @foreach (var b in cellSessions)
+                                            {
+                                                bool isExam = b.NoiDung.ToLower().Contains("kiểm tra") || b.NoiDung.ToLower().Contains("thi ");
+                                                bool isFocusClass = selectedMaLop.HasValue && b.MaLop == selectedMaLop.Value;
+                                                bool isGreenHighlight = isToday || isFocusClass;
+
+                                                <!-- Session Block Card (Chuẩn style ô Thực hành lập trình .NET trong ảnh) -->
+                                                <div class="p-3 rounded-xl border text-xs shadow-xs transition-all hover:shadow-md
+                                                    @(isGreenHighlight 
+                                                        ? "bg-[#66bb6a] text-slate-950 border-[#43a047] ring-1 ring-[#43a047]" 
+                                                        : isExam 
+                                                            ? "bg-amber-100 text-amber-950 border-amber-300" 
+                                                            : "bg-[#e8edf5] text-slate-900 border-[#cbd5e1]")">
+                                                    
+                                                    <!-- Course Title -->
+                                                    <h4 class="font-extrabold text-[13px] leading-tight mb-1 text-slate-950">
+                                                        @(b.LopHoc?.TenLop ?? "Khóa học thực chiến")
+                                                    </h4>
+
+                                                    <!-- Class code / Department -->
+                                                    <div class="text-[11px] font-semibold opacity-90 leading-tight mb-1">
+                                                        DHTI17A1HN - TI17A1
+                                                    </div>
+
+                                                    <!-- Period / Time Slot -->
+                                                    <div class="text-[11px] font-bold font-mono leading-tight mb-1 flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-[13px]">schedule</span>
+                                                        <span>@b.ThoiGianBatDau.ToString("HH:mm") - @b.ThoiGianKetThuc.ToString("HH:mm")</span>
+                                                        <span class="opacity-75">(@(ca == "Sáng" ? "Tiết: 1 - 6" : ca == "Chiều" ? "Tiết: 7 - 12" : "Tiết: 13 - 15"))</span>
+                                                    </div>
+
+                                                    <!-- Room -->
+                                                    <div class="text-[11px] font-medium leading-tight mb-1 flex items-start gap-1">
+                                                        <span class="material-symbols-outlined text-[13px] shrink-0 mt-0.5">room</span>
+                                                        <span>Phòng: <strong>@b.PhongHoc</strong></span>
+                                                    </div>
+
+                                                    <!-- Instructor -->
+                                                    <div class="text-[11px] font-medium leading-tight flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-[13px]">person</span>
+                                                        <span>GV: <strong>@b.GiangVien</strong></span>
+                                                    </div>
+
+                                                    <!-- Topic tooltip/badge -->
+                                                    @if (!string.IsNullOrWhiteSpace(b.NoiDung))
+                                                    {
+                                                        <div class="mt-2 pt-1.5 border-t border-black/10 text-[10px] leading-snug line-clamp-2 italic opacity-90">
+                                                            @b.NoiDung
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Notes & Legend Strip -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-border-standard shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-outline">
+        <div class="flex flex-wrap items-center gap-4">
+            <span class="font-bold text-brand-deep">Chú thích màu sắc:</span>
+            <span class="inline-flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-[#66bb6a] border border-[#43a047]"></span>
+                <span>Lớp hôm nay / Lớp đang theo dõi</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-[#e8edf5] border border-[#cbd5e1]"></span>
+                <span>Lớp học lý thuyết & thực hành</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-amber-100 border border-amber-300"></span>
+                <span>Lịch thi / Kiểm tra đánh giá</span>
+            </span>
+        </div>
+        <div class="font-mono text-[11px]">
+            Tuần học từ <strong>@monday.ToString("dd/MM/yyyy")</strong> đến <strong>@sunday.ToString("dd/MM/yyyy")</strong>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<script>
+    function changeLoaiLich(val) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('loaiLich', val);
+        window.location.href = url.toString();
+    }
+
+    function changeLopHoc(val) {
+        const url = new URL(window.location.href);
+        if (val) {
+            url.searchParams.set('maLop', val);
+        } else {
+            url.searchParams.delete('maLop');
+        }
+        window.location.href = url.toString();
+    }
+
+    function changeDate(val) {
+        if (!val) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('ngay', val);
+        window.location.href = url.toString();
+    }
+</script>
+}

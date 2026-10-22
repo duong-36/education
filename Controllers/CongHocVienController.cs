@@ -318,6 +318,103 @@ namespace QuanLyDangKyKhoaHoc_UNETI04_TI17A1HN.Controllers
             return Json(new { success = true, message = $"Đã hủy đăng ký lớp '{dk.LopHoc?.TenLop}' thành công." });
         }
 
+        // --- THỜI KHÓA BIỂU THEO TUẦN (WEEKLY TIMETABLE MATRIX CHUẨN UNETI) ---
+        public async Task<IActionResult> ThoiKhoaBieu(int? maLop, DateTime? ngay, string loaiLich = "tat_ca")
+        {
+            var student = await GetCurrentHocVienAsync();
+            if (student == null)
+            {
+                TempData["Warning"] = "Vui lòng đăng nhập tài khoản học viên để xem thời khóa biểu.";
+                return RedirectToAction("Login", "TaiKhoan", new { returnUrl = Request.Path + Request.QueryString });
+            }
+
+            ViewBag.CurrentStudent = student;
+
+            // 1. Lấy danh sách các lớp học viên đang theo học hoặc đã đóng phí
+            var myEnrolled = await _context.DangKyHocs
+                .Include(d => d.LopHoc)
+                    .ThenInclude(l => l.ChuongTrinhDaoTao)
+                .Where(d => d.MaHocVien == student.MaHocVien && 
+                           (d.TrangThai == "Đang học" || d.TrangThai == "Đã đóng học phí" || d.TrangThai == "Đã duyệt"))
+                .ToListAsync();
+
+            ViewBag.MyEnrolledClasses = myEnrolled;
+            var activeClassIds = myEnrolled.Select(d => d.MaLop).ToList();
+
+            // 2. Xác định ngày trung tâm để tính tuần
+            DateTime targetDate = ngay ?? new DateTime(2026, 10, 22);
+
+            // Nếu chọn 1 lớp cụ thể và chưa truyền ngày, ưu tiên lấy ngày có buổi học gần ngày hôm nay nhất của lớp đó
+            if (maLop.HasValue && !ngay.HasValue)
+            {
+                var nearSession = await _context.BuoiHocs
+                    .Where(b => b.MaLop == maLop.Value && b.TrangThai != "Đã hủy")
+                    .OrderBy(b => Math.Abs(EF.Functions.DateDiffDay(b.ThoiGianBatDau, DateTime.Today)))
+                    .FirstOrDefaultAsync();
+
+                if (nearSession != null)
+                {
+                    targetDate = nearSession.ThoiGianBatDau.Date;
+                }
+            }
+
+            // 3. Tính toán Thứ 2 đầu tuần và Chủ nhật cuối tuần
+            int diff = (7 + (targetDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+            DateTime monday = targetDate.Date.AddDays(-diff);
+            DateTime sunday = monday.AddDays(6).Date.AddHours(23).AddMinutes(59).AddSeconds(59);
+
+            var weekDays = new List<DateTime>();
+            for (int i = 0; i < 7; i++)
+            {
+                weekDays.Add(monday.AddDays(i));
+            }
+
+            ViewBag.WeekDays = weekDays;
+            ViewBag.Monday = monday;
+            ViewBag.Sunday = sunday;
+            ViewBag.SelectedDate = targetDate;
+            ViewBag.SelectedMaLop = maLop;
+            ViewBag.SelectedLoaiLich = loaiLich;
+
+            LopHoc? selectedLop = null;
+            if (maLop.HasValue)
+            {
+                selectedLop = await _context.LopHocs.FindAsync(maLop.Value);
+            }
+            ViewBag.SelectedLop = selectedLop;
+
+            // 4. Lọc các buổi học trong tuần
+            var query = _context.BuoiHocs
+                .Include(b => b.LopHoc)
+                    .ThenInclude(l => l.ChuongTrinhDaoTao)
+                .Where(b => b.ThoiGianBatDau >= monday && b.ThoiGianBatDau <= sunday && b.TrangThai != "Đã hủy");
+
+            if (maLop.HasValue && maLop.Value > 0)
+            {
+                query = query.Where(b => b.MaLop == maLop.Value);
+            }
+            else
+            {
+                // Mặc định hiển thị tất cả các lớp mà học viên đang theo học
+                query = query.Where(b => activeClassIds.Contains(b.MaLop));
+            }
+
+            if (loaiLich == "lich_hoc")
+            {
+                query = query.Where(b => !b.NoiDung.ToLower().Contains("kiểm tra") && !b.NoiDung.ToLower().Contains("thi "));
+            }
+            else if (loaiLich == "lich_thi")
+            {
+                query = query.Where(b => b.NoiDung.ToLower().Contains("kiểm tra") || b.NoiDung.ToLower().Contains("thi "));
+            }
+
+            var sessions = await query
+                .OrderBy(b => b.ThoiGianBatDau)
+                .ToListAsync();
+
+            return View(sessions);
+        }
+
         // --- KHÔNG GIAN HỌC TẬP CỦA TÔI (MY LEARNING DASHBOARD) ---
         public async Task<IActionResult> TienTrinh()
         {
